@@ -1,0 +1,60 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>COMPROBANTE DE RESERVACION</title>
+  </head>
+  <body>
+    <div id="pageHeader" style="border-bottom: 1px solid #ddd; padding-bottom: 5px;">
+      <p style="color: #666; margin: 0; padding-top: 12px; padding-bottom: 5px; text-align: right; font-family: sans-serif; font-size: .85em">
+        COMPROBANTE DE RESERVACION
+      </p>
+    </div>
+    <div id="pageFooter" style="border-top: 1px solid #ddd; padding-top: 5px;">
+      <p style="color: #666; margin: 0; padding-bottom: 5px; text-align: right; font-family: sans-serif; font-size: .65em">
+      BHI Viajes</p>
+    </div>
+    <div style= "width: 100%">
+      <h3>Código de reserva <%= reservacion.codigoReserva %></h3>
+      <div style= "width: 50%; float: left">
+        <p><b>Destino:</b> <%= reservacion.destino %></p>
+        <p><b>Cantidad de noches:</b> <%= reservacion.noches %></p>
+        <p><b>Salida:</b> <%= reservacion.salida %></p>
+        <p><b>Fecha:</b> <%= reservacion.fecha %></p>
+        <p style= "height: 60px"><b>Observaciones Generales:</b> <br><%= reservacion.observaciones %></p>
+        <p><b>Tipo de Bus:</b> <%= reservacion.tipoBus %></p>
+        <p><b>Asientos reservados:</b> 
+          <% if (reservacion.asientos.length > 0) { %>
+            <% reservacion.asientos.forEach(asiento => {%>
+              &nbsp-&nbsp <%= asiento %>
+            <%  });%>
+          <% }%>
+        </p>
+      </div>
+      <div style= "width: 50%; float: left">
+        <p><b>Cantidad de pasajeros:</b> </p>
+        <% if (reservacion.adultos > 0) { %>
+          <p><%= reservacion.adultos %> &nbsp adultos</p>
+        <% }%>
+        <% if (reservacion.menores > 0) { %>
+          <p><%= reservacion.menores %> &nbsp niños</p>
+        <% }%>
+        <% if (reservacion.bebes > 0) { %>
+          <p><%= reservacion.bebes %> &nbsp bebés</p>
+        <% }%>
+        <p><b>Hotel:</b> <%= reservacion.hotel %></p>
+        <% if (reservacion.hab_doble > 0) { %>
+          <p><%= reservacion.hab_doble %> &nbsp habitación doble</p>
+        <% }%>
+        <% if (reservacion.hab_individual > 0) { %>
+          <p><%= reservacion.hab_individual %> &nbsp habitación individual</p>
+        <% }%>
+        <% if (reservacion.hab_triple > 0) { %>
+          <p><%= reservacion.hab_triple %> &nbsp habitación triple</p>
+        <% }%>
+        <% if (reservacion.hab_cuadruple > 0) { %>
+          <p><%= reservacion.hab_cuadruple %> &nbsp habitación cuádruple</p>
+        <% }%>        
+      </div>
+    </div>
+  </body>
+</html>

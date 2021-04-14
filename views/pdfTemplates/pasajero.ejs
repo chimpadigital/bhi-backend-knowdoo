@@ -1,0 +1,38 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>COMPROBANTE DE PASAJERO CONFIRMADO</title>
+  </head>
+  <body>
+    <div id="pageHeader" style="border-bottom: 1px solid #ddd; padding-bottom: 5px;">
+      <p style="color: #666; margin: 0; padding-top: 12px; padding-bottom: 5px; text-align: right; font-family: sans-serif; font-size: .85em">
+        COMPROBANTE DE PASAJERO CONFIRMADO
+      </p>
+    </div>
+    <div id="pageFooter" style="border-top: 1px solid #ddd; padding-top: 5px;">
+      <p style="color: #666; margin: 0; padding-bottom: 5px; text-align: right; font-family: sans-serif; font-size: .65em">
+      BHI Viajes</p>
+    </div>
+    <div style= "width: 100%">
+      <h3>Pasajero con reserva <%= pasajero.codigoReserva %></h3>
+      <div style= "width: 50%; float: left">
+        <p><b>Nombre Completo:</b> <%= pasajero.nombre %></p>
+        <p><b>Teléfono:</b> <%= pasajero.telefono %></p>
+        <p><b>Correo Electrónico:</b> <%= pasajero.correo %></p>
+        <p style= "height: 60px"><b>Observaciones Generales:</b> <br><%= pasajero.observaciones %></p>
+        <p><b>En caso de emergencia comunicarse con:</b> </p>
+        <p><b>Nombre completo:</b> <%= pasajero.nombreEmergencia %></p>
+        <p><b>Teléfono:</b> <%= pasajero.telefonoEmergencia %></p>
+      </div>
+      <div style= "width: 50%; float: left">
+        <p><b>Tipo de documento:</b> <%= pasajero.documento %></p>
+        <p><b>Nº de documento:</b> <%= pasajero.numero %></p>
+        <p><b>Tipo de habitacion:</b> <%= pasajero.habitacion %></p>
+        <p><b>Redes sociales:</b> </p>
+        <p><b>Facebook:</b> <%= pasajero.facebook %></p>
+        <p><b>Twitter:</b> <%= pasajero.twitter %></p>
+        <p><b>Instagram:</b> <%= pasajero.instagram %></p>
+      </div>
+    </div>
+  </body>
+</html>
