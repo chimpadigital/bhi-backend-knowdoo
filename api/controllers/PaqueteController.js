@@ -217,23 +217,22 @@ module.exports = {
         //Eliminar reservaciones del paquete
         var reservas = await Reservacion.find({ where: {id_paquete:req.param('id')},
                                                 select: ['comprobante'] });
-        console.log('Reservas del paquete: '+ reservas.length + ' Datos: '+ JSON.stringify(reservas));
         for(var x = 0; x < reservas.length; x++)  {
             var reserva = reservas[x];
             //eliminar comprobante de reserva
             if(reserva.comprobante !== null && reserva.comprobante !== undefined && reserva.comprobante !== "") {
                 await fs.unlink('comprobantes/'+reserva.comprobante); 
             }     
-            //eliminar archivos de pasajeros y pasajeros
+            //eliminar archivos de pasajeros
             var archivos = await  Pasajero.find({ where: {id_reservacion:reserva.id},
                                                 select: ['comprobante', 'ficha_medica','imagen_documento'] });
             for(var y = 0; y < archivos.length; y++) {
                 var archivo = archivos[y];
                 if(archivo.imagen_documento !== null && archivo.imagen_documento !== undefined && archivo.imagen_documento !== "") {
-                    await fs.unlink('comprobantes/'+archivo.imagen_documento); 
+                    await fs.unlink("documents/"+archivo.imagen_documento); 
                 }   
                 if(archivo.ficha_medica !== null && archivo.ficha_medica !== undefined && archivo.ficha_medica !== "") {
-                    await fs.unlink('comprobantes/'+archivo.ficha_medica); 
+                    await fs.unlink("documents/"+archivo.ficha_medica); 
                 }
                 if(archivo.comprobante !== null && archivo.comprobante !== undefined && archivo.comprobante !== "") {
                     await fs.unlink('comprobantes/'+archivo.comprobante); 

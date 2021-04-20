@@ -149,6 +149,12 @@ module.exports.policies = {
     'deletePasajerosReserva':  ['isAuthorized', 'isAdmin'],
     'getPasajeros': ['isAuthorized', 'isAdmin'],
     'comprobante': ['isAuthorized', 'isAdmin'],
+    'updateDoc': ['isAuthorized', 'isAdmin'],
+    'deleteDoc': ['isAuthorized', 'isAdmin'],
+    'updateFicha': ['isAuthorized', 'isAdmin'],
+    'deleteFicha': ['isAuthorized', 'isAdmin'],
+    'downloadDoc': ['isAuthorized', 'isAdmin'],
+    'downloadFicha': ['isAuthorized', 'isAdmin'],
   }
 
 };

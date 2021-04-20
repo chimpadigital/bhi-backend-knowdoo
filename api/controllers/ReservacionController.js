@@ -10,6 +10,7 @@ var pdf = require('html-pdf');
 var ejs = require("ejs");
 var path = require('path');
 const fs = require('fs').promises;
+var fsd = require('fs');
 
 module.exports = {
     create: async function(req, res) {
@@ -69,6 +70,7 @@ module.exports = {
 
     getCodeReservacion: async function(req, res) {
         const reservacion = req.param('id');
+        
         //Obtener reservacion
         if(reservacion !== null && reservacion !== undefined && reservacion !== ''){
             var reserva = await Reservacion.findOne({id: parseInt(reservacion)});
@@ -89,7 +91,7 @@ module.exports = {
             return res.send({ code: "OK", msg: "RESERVACION_CHANGE_STATE_SUCCESS", obj: updated });     
         } else {
             return res.send({ code: "ERR", msg: "RESERVACION_CHANGE_STATE_ERROR" });
-        }    
+        }   
 
     },
 
@@ -155,10 +157,10 @@ module.exports = {
         for(var x = 0; x < archivos.length; x++) {
             var archivo = archivos[x];
             if(archivo.imagen_documento !== null && archivo.imagen_documento !== undefined && archivo.imagen_documento !== "") {
-                await fs.unlink('comprobantes/'+archivo.imagen_documento); 
+                await fs.unlink("documents/"+archivo.imagen_documento); 
             }   
             if(archivo.ficha_medica !== null && archivo.ficha_medica !== undefined && archivo.ficha_medica !== "") {
-                await fs.unlink('comprobantes/'+archivo.ficha_medica); 
+                await fs.unlink("documents/"+archivo.ficha_medica); 
             }
             if(archivo.comprobante !== null && archivo.comprobante !== undefined && archivo.comprobante !== "") {
                 await fs.unlink('comprobantes/'+archivo.comprobante); 
@@ -270,7 +272,18 @@ module.exports = {
                               return res.serverError(err);
                             }                          
                           });                        
-                        return res.send(pdfres)
+                        //return res.send(pdfres);
+                        //Devolver comprobante
+                        let file = path.resolve(sails.config.appPath, 'comprobantes/'+comprobante);
+                        res.setHeader('content-type', 'application/pdf');
+                        let filestream = fsd.createReadStream(file);
+                        filestream.on('open', function () {
+                            // This just pipes the read stream to the response object (which goes to the client)
+                            filestream.pipe(res);                    
+                        });
+                        filestream.on('error', function(err) {
+                            res.end(err);
+                        });   
                     }
                 });
             }

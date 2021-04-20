@@ -27,7 +27,7 @@ module.exports = {
 
     codigo: { type: 'string', required: false },
     estado: { type: 'number', defaultsTo: 0 },
-    fecha_registro: { type: 'string', columnType: 'DateTime', required: false },
+    fecha_registro: { type: 'ref', columnType: 'DateTime', required: false },
     comprobante: { type: 'string', required: false },
 
 

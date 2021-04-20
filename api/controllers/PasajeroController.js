@@ -8,11 +8,11 @@ var pdf = require('html-pdf');
 var ejs = require("ejs");
 var path = require('path');
 const fs = require('fs').promises;
+var fsd = require('fs');
 
 module.exports = {
     create: async function(req, res) {
         const data = req.body;
-        
         //comprobar reservacion
         if(data.reservacion !== null && data.reservacion !== undefined && data.reservacion !== ''){
             var id_reservacion = await Reservacion.findOne({id: parseInt(data.reservacion)});
@@ -31,8 +31,6 @@ module.exports = {
             tipo_documento: data.tipoDocumento,
             numero_documento: data.numeroDocumento,
             observaciones_pasajero: data.observaciones,
-            imagen_documento: data.documento,
-            ficha_medica: data.ficha,
             nombre_emergencia: data.nombreEmergencia,
             telefono_emergencia: data.telefonoEmergencia,
             facebook_pasajero: data.facebook,
@@ -42,11 +40,57 @@ module.exports = {
             id_tipoHabitacion: data.habitacion,
             id_reservacion: id_reservacion,       
         }).fetch();
-        if(createdRegister !== null && createdRegister !== undefined) {
+        if(createdRegister !== null && createdRegister !== undefined) { 
+            //subir documentos
+           var uploadFile = req.file('documento');
+            await uploadFile.upload({ dirname: '../../documents'},function onUploadComplete(err, files) {  
+                if (err) {
+                    return res.serverError(err);  // IF ERROR Return and send 500 error with error
+                } 
+                if(files[0] !== undefined){
+                    var pathfile = files[0].fd;
+                    var name = pathfile.substr(
+                        Math.max(
+                            pathfile.lastIndexOf('\\'),
+                            pathfile.lastIndexOf('/'),
+                        ) + 1,
+                    );     
+                    Pasajero.updateOne({ id: createdRegister.id }).set({
+                        imagen_documento: name,
+                    }).exec((err, update)=>{
+                        if (err) {
+                            return res.serverError(err);
+                        }                          
+                    });  
+                }
+            });
+            //subir ficha medica
+            var uploadFile = req.file('ficha');
+            await uploadFile.upload({ dirname: '../../documents'},function onUploadComplete(err, files) {  
+                if (err) {
+                    return res.serverError(err);  // IF ERROR Return and send 500 error with error
+                } 
+                if(files[0] !== undefined){
+                    var pathfile = files[0].fd;
+                    var name = pathfile.substr(
+                        Math.max(
+                            pathfile.lastIndexOf('\\'),
+                            pathfile.lastIndexOf('/'),
+                        ) + 1,
+                    );     
+                    Pasajero.updateOne({ id: createdRegister.id }).set({
+                        ficha_medica: name,
+                    }).exec((err, update)=>{
+                        if (err) {
+                            return res.serverError(err);
+                        }                          
+                    });  
+                }
+            });           
             return res.send({ code: "OK", msg: "PASAJERO_CREATED" });     
         } else {
             return res.send({ code: "ERR", msg: "PASAJERO_NOT_CREATED" });
-        }             
+        }               
     },
 
     update: async function(req, res) {
@@ -59,9 +103,7 @@ module.exports = {
             email_pasajero: data.email,
             tipo_documento: data.tipoDocumento,
             numero_documento: data.numeroDocumento,
-            observaciones_pasajero: data.observaciones,
-            imagen_documento: data.documento,
-            ficha_medica: data.ficha,
+            observaciones_pasajero: data.observaciones,            
             nombre_emergencia: data.nombreEmergencia,
             telefono_emergencia: data.telefonoEmergencia,
             facebook_pasajero: data.facebook,
@@ -71,10 +113,235 @@ module.exports = {
             id_tipoHabitacion: data.habitacion,           
         });
         if(updatedRegister !== null && updatedRegister !== undefined) {
+            //subir documentos
+            var uploadFile = req.file('documento');
+            await uploadFile.upload({ dirname: '../../documents'},function onUploadComplete(err, files) {  
+                if (err) {
+                    return res.serverError(err);  // IF ERROR Return and send 500 error with error
+                } 
+                if(files[0] !== undefined){
+                    var oldname = updatedRegister.imagen_documento;
+                    if(oldname !== null && oldname !== undefined && oldname !== ''){
+                        fs.unlink("documents/"+oldname, (err => {
+                            if (err) console.log(err);                                
+                        }));                   
+                    }
+                    var pathfile = files[0].fd;
+                    var name = pathfile.substr(
+                        Math.max(
+                            pathfile.lastIndexOf('\\'),
+                            pathfile.lastIndexOf('/'),
+                        ) + 1,
+                    );     
+                    Pasajero.updateOne({ id: updatedRegister.id }).set({
+                        imagen_documento: name,
+                    }).exec((err, update)=>{
+                        if (err) {
+                            return res.serverError(err);
+                        }                          
+                    });  
+                }
+            });
+            var uploadFile = req.file('ficha');
+            await uploadFile.upload({ dirname: '../../documents'},function onUploadComplete(err, files) {  
+                if (err) {
+                    return res.serverError(err);  // IF ERROR Return and send 500 error with error
+                } 
+                if(files[0] !== undefined){
+                    var oldname = updatedRegister.ficha_medica;
+                    if(oldname !== null && oldname !== undefined && oldname !== ''){
+                        fs.unlink("documents/"+oldname, (err => {
+                            if (err) console.log(err);                                
+                        }));                   
+                    }
+                    var pathfile = files[0].fd;
+                    var name = pathfile.substr(
+                        Math.max(
+                            pathfile.lastIndexOf('\\'),
+                            pathfile.lastIndexOf('/'),
+                        ) + 1,
+                    );     
+                    Pasajero.updateOne({ id: updatedRegister.id }).set({
+                        ficha_medica: name,
+                    }).exec((err, update)=>{
+                        if (err) {
+                            return res.serverError(err);
+                        }                          
+                    });  
+                }
+            });
             return res.send({ code: "OK", msg: "PASAJERO_EDIT_SUCCESS" });     
         } else {
             return res.send({ code: "ERR", msg: "PASAJERO_EDIT_ERROR" });
         }                  
+    },
+
+    updateDoc: async function(req, res, next) {
+        const data = req.body;
+        var archivo = await  Pasajero.findOne({ where: {id: data.id},
+                                                 select: ['imagen_documento'] });
+        if(archivo !== null && archivo !== undefined) {
+            //subir documentos
+            var uploadFile = req.file('documento');
+            await uploadFile.upload({ dirname: '../../documents'},function onUploadComplete(err, files) {  
+                if (err) {
+                    return res.serverError(err);  // IF ERROR Return and send 500 error with error
+                } 
+                if(files[0] !== undefined){
+                    var oldname = archivo.imagen_documento;
+                    if(oldname !== null && oldname !== undefined && oldname !== ''){
+                        fs.unlink("documents/"+oldname, (err => {
+                            if (err) console.log(err);                                
+                        }));                   
+                    }
+                    var pathfile = files[0].fd;
+                    var name = pathfile.substr(
+                        Math.max(
+                            pathfile.lastIndexOf('\\'),
+                            pathfile.lastIndexOf('/'),
+                        ) + 1,
+                    );     
+                    Pasajero.updateOne({ id: data.id }).set({
+                        imagen_documento: name,
+                    }).exec((err, update)=>{
+                        if (err) {
+                            return res.serverError(err);
+                        }                          
+                    }); 
+                    return res.send({ code: "OK", msg: "DOCUMENT_UPLOADED" });
+                } else {
+                    return res.send({ code: "ERR", msg: "DOCUMENT_NOT_UPLOADED" });
+                }
+            });            
+        }  else {
+            return res.send({ code: "ERR", msg: "PASAJERO_NOT_FOUND" });
+        }      
+    },
+
+    deleteDoc: async function(req, res, next) {
+        var archivo = await  Pasajero.findOne({ where: {id:req.param('id')},
+                                                select: ['imagen_documento'] });
+        if(archivo !== null && archivo !== undefined) {
+            //eliminar fichero
+            if(archivo.imagen_documento !== null && archivo.imagen_documento !== undefined && archivo.imagen_documento !== "") {
+                await fs.unlink("documents/"+archivo.imagen_documento); 
+            } 
+            //actualizar BD
+            await Pasajero.updateOne({ id: req.param('id') }).set({
+                imagen_documento: '',
+            });                                                    
+            return res.send({ code: "OK", msg: "DOCUMENT_DELETED" });
+        }  else {
+            return res.send({ code: "ERR", msg: "PASAJERO_NOT_FOUND" });
+        }     
+    },
+    
+    downloadDoc: async function(req, res) {
+        var archivo = await  Pasajero.findOne({ where: {id:req.param('id')},
+                                                select: ['imagen_documento'] });
+        if(archivo !== null && archivo !== undefined) {
+            if(archivo.imagen_documento !== null && archivo.imagen_documento !== undefined && archivo.imagen_documento !== "") {
+                let file = path.resolve(sails.config.appPath, 'documents/'+archivo.imagen_documento);
+                res.setHeader('Content-disposition', 'attachment; filename=' + archivo.imagen_documento);
+                let filestream = fsd.createReadStream(file);
+                filestream.on('open', function () {
+                    // This just pipes the read stream to the response object (which goes to the client)
+                    filestream.pipe(res);                    
+                });
+                filestream.on('error', function(err) {
+                    res.end(err);
+                });               
+            } else {
+                return res.send({ code: "ERR", msg: "DOCUMENTO_NOT_FOUND" });
+            }
+        } else {
+            return res.send({ code: "ERR", msg: "PASAJERO_NOT_FOUND" });
+        }    
+       
+    },
+
+    updateFicha: async function(req, res, next) {
+        const data = req.body;
+        var archivo = await  Pasajero.findOne({ where: {id: data.id},
+                                                 select: ['ficha_medica'] });
+        if(archivo !== null && archivo !== undefined) {
+            //subir documentos
+            var uploadFile = req.file('ficha');
+            await uploadFile.upload({ dirname: '../../documents'},function onUploadComplete(err, files) {  
+                if (err) {
+                    return res.serverError(err);  // IF ERROR Return and send 500 error with error
+                } 
+                if(files[0] !== undefined){
+                    var oldname = archivo.ficha_medica;
+                    if(oldname !== null && oldname !== undefined && oldname !== ''){
+                        fs.unlink("documents/"+oldname, (err => {
+                            if (err) console.log(err);                                
+                        }));                   
+                    }
+                    var pathfile = files[0].fd;
+                    var name = pathfile.substr(
+                        Math.max(
+                            pathfile.lastIndexOf('\\'),
+                            pathfile.lastIndexOf('/'),
+                        ) + 1,
+                    );     
+                    Pasajero.updateOne({ id: data.id }).set({
+                        ficha_medica: name,
+                    }).exec((err, update)=>{
+                        if (err) {
+                            return res.serverError(err);
+                        }                          
+                    });  
+                    return res.send({ code: "OK", msg: "DOCUMENT_UPLOADED" });
+                } else {
+                    return res.send({ code: "ERR", msg: "DOCUMENT_NOT_UPOADED" });
+                }
+            });            
+        }  else {
+            return res.send({ code: "ERR", msg: "PASAJERO_NOT_FOUND" });
+        }     
+    },
+
+    deleteFicha: async function(req, res, next) {
+        var archivo = await  Pasajero.findOne({ where: {id:req.param('id')},
+                                                select: ['ficha_medica'] });
+        if(archivo !== null && archivo !== undefined) {
+            //eliminar fichero
+            if(archivo.ficha_medica !== null && archivo.ficha_medica !== undefined && archivo.ficha_medica !== "") {
+                await fs.unlink("documents/"+archivo.ficha_medica); 
+            } 
+            //actualizar BD
+            await Pasajero.updateOne({ id: req.param('id') }).set({
+                ficha_medica: '',
+            });                                                    
+            return res.send({ code: "OK", msg: "DOCUMENT_DELETED" });
+        }  else {
+            return res.send({ code: "ERR", msg: "PASAJERO_NOT_FOUND" });
+        }     
+    },
+
+    downloadFicha: async function(req, res) {
+        var archivo = await  Pasajero.findOne({ where: {id:req.param('id')},
+                                                select: ['ficha_medica'] });
+        if(archivo !== null && archivo !== undefined) {
+            if(archivo.ficha_medica !== null && archivo.ficha_medica !== undefined && archivo.ficha_medica !== "") {
+                let file = path.resolve(sails.config.appPath, 'documents/'+archivo.ficha_medica);
+                res.setHeader('content-type', 'application/pdf');
+                //res.setHeader('Content-disposition', 'attachment; filename=' + archivo.ficha_medica);
+                let filestream = fsd.createReadStream(file);
+                filestream.on('open', function () {
+                    // This just pipes the read stream to the response object (which goes to the client)
+                    filestream.pipe(res);                    
+                });
+                filestream.on('error', function(err) {
+                    res.end(err);
+                });               
+            } else {
+                return res.send({ code: "ERR", msg: "DOCUMENTO_NOT_FOUND" });
+            }
+        } else {
+            return res.send({ code: "ERR", msg: "PASAJERO_NOT_FOUND" });
+        }           
     },
 
     changeEstado: async function(req, res, next) {
@@ -108,10 +375,10 @@ module.exports = {
                                                  select: ['comprobante', 'ficha_medica','imagen_documento'] });
         if(archivos !== null && archivos !== undefined) {
             if(archivos.imagen_documento !== null && archivos.imagen_documento !== undefined && archivos.imagen_documento !== "") {
-                await fs.unlink('comprobantes/'+archivos.imagen_documento); 
+                await fs.unlink("documents/"+archivos.imagen_documento); 
             }   
             if(archivos.ficha_medica !== null && archivos.ficha_medica !== undefined && archivos.ficha_medica !== "") {
-                await fs.unlink('comprobantes/'+archivos.ficha_medica); 
+                await fs.unlink("documents/"+archivos.ficha_medica); 
             }
             if(archivos.comprobante !== null && archivos.comprobante !== undefined && archivos.comprobante !== "") {
                 await fs.unlink('comprobantes/'+archivos.comprobante); 
@@ -127,10 +394,10 @@ module.exports = {
         for(var x = 0; x < archivos.length; x++) {
             var archivo = archivos[x];
             if(archivo.imagen_documento !== null && archivo.imagen_documento !== undefined && archivo.imagen_documento !== "") {
-                await fs.unlink('comprobantes/'+archivo.imagen_documento); 
+                await fs.unlink("documents/"+archivo.imagen_documento); 
             }   
             if(archivo.ficha_medica !== null && archivo.ficha_medica !== undefined && archivo.ficha_medica !== "") {
-                await fs.unlink('comprobantes/'+archivo.ficha_medica); 
+                await fs.unlink("documents/"+archivo.ficha_medica); 
             }
             if(archivo.comprobante !== null && archivo.comprobante !== undefined && archivo.comprobante !== "") {
                 await fs.unlink('comprobantes/'+archivo.comprobante); 
@@ -147,10 +414,10 @@ module.exports = {
         for(var x = 0; x < archivos.length; x++) {
             var archivo = archivos[x];
             if(archivo.imagen_documento !== null && archivo.imagen_documento !== undefined && archivo.imagen_documento !== "") {
-                await fs.unlink('comprobantes/'+archivo.imagen_documento); 
+                await fs.unlink("documents/"+archivo.imagen_documento); 
             }   
             if(archivo.ficha_medica !== null && archivo.ficha_medica !== undefined && archivo.ficha_medica !== "") {
-                await fs.unlink('comprobantes/'+archivo.ficha_medica); 
+                await fs.unlink("documents/"+archivo.ficha_medica); 
             }
             if(archivo.comprobante !== null && archivo.comprobante !== undefined && archivo.comprobante !== "") {
                 await fs.unlink('comprobantes/'+archivo.comprobante); 
@@ -229,7 +496,18 @@ module.exports = {
                               return res.serverError(err);
                             }                          
                           });                        
-                        return res.send(pdfres)
+                        //return res.send(pdfres)
+                        //Devolver comprobante
+                        let file = path.resolve(sails.config.appPath, 'comprobantes/'+comprobante);
+                        res.setHeader('content-type', 'application/pdf');
+                        let filestream = fsd.createReadStream(file);
+                        filestream.on('open', function () {
+                            // This just pipes the read stream to the response object (which goes to the client)
+                            filestream.pipe(res);                    
+                        });
+                        filestream.on('error', function(err) {
+                            res.end(err);
+                        });   
                     }
                 });
             }

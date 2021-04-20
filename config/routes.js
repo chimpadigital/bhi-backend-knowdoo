@@ -153,6 +153,8 @@ module.exports.routes = {
   'POST /api/pasajero/update': 'PasajeroController.update',
   'POST /api/pasajero/changeEstados': 'PasajeroController.changeEstadoPasajeros',
   'POST /api/pasajero/deletePasajeros': 'PasajeroController.deletePasajeros',
+  'POST /api/pasajero/updateDocumento': 'PasajeroController.updateDoc',
+  'POST /api/pasajero/updateFichaMedica': 'PasajeroController.updateFicha',
   'GET /api/pasajero/changeEstadosReserva': 'PasajeroController.changeEstadoReserva',
   'GET /api/pasajero/change': 'PasajeroController.changeEstado',
   'GET /api/pasajero/delete': 'PasajeroController.delete',
@@ -160,5 +162,8 @@ module.exports.routes = {
   'GET /api/pasajero/get': 'PasajeroController.show',
   'GET /api/pasajero/list': 'PasajeroController.getPasajeros',
   'GET /api/pasajero/check': 'PasajeroController.comprobante',
-
+  'GET /api/pasajero/deleteDocumento':'PasajeroController.deleteDoc',
+  'GET /api/pasajero/deleteFichaMedica':'PasajeroController.deleteFicha',
+  'GET /api/pasajero/downloadDocumento': 'PasajeroController.downloadDoc',
+  'GET /api/pasajero/downloadFichaMedica': 'PasajeroController.downloadFicha',
 };
