@@ -52,7 +52,7 @@ module.exports.datastores = {
     // url: 'mysql://user:password@host:port/database',
 
     adapter: 'sails-mysql',
-    url: 'mysql://root:root@localhost:3306/disposal', //(password)
+    url: 'mysql://root:root@localhost:3306/bhi', //(password)
 
    /*  adapter: 'sails-mysql',
     url: 'mysql://root@localhost:3306/bhi' */  //(no password)
