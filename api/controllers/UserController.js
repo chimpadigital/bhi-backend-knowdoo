@@ -78,25 +78,37 @@ module.exports = {
     login: async function(req, res) {
         const data = req.body;
         if (!data.email || !data.password) return res.badRequest('Email and password required');
-        var foundedUser = await User.findOne({ email_user: data.email }).populate('id_estado_user');
+        var foundedUser = await User.findOne({ email_user: data.email });
         if(foundedUser !== null && foundedUser !== undefined) {
             var newToken = jwToken.issue({ id: foundedUser.id });
             User.comparePassword(data.password, foundedUser.password_user)
                 .then(() => {
                     //console.log('estado del usuario: '+ )
-                    if(foundedUser.id_estado_user.nombre === 'Inactivo') {  // Inactivo
+                    if(foundedUser.id_estado_user == 2) {  // Inactivo
                         return res.send({ code: "OK", msg: "USER_IS_INACTIVE" });    
                     }
-                    return res.send({ token: newToken, email: foundedUser.email_user, type: foundedUser.id_roll_user.id});
+                    var user = {
+                        id: foundedUser.id,
+                        email: foundedUser.email_user,
+                        token: foundedUser.token,
+                        rol: foundedUser.id_roll_user
+                    }
+                    return res.send({ code: "OK", msg: "USER_LOGIN_SUCCESS", user: user });
                 })
                 .catch((err) => {
                     // Compare with temporal password
                     User.comparePassword(data.password, foundedUser.password_user_temp)
                     .then(() => {
-                        if(foundedUser.id_estado_user.nombre === 'Inactivo') {  // Inactivo
+                        if(foundedUser.id_estado_user == 2) {  // Inactivo
                             return res.send({ code: "OK", msg: "USER_IS_INACTIVE" });    
                         }
-                        return res.send({ token: newToken, email: foundedUser.email_user, type: foundedUser.id_roll_user.id});
+                        var user = {
+                            id: foundedUser.id,
+                            email: foundedUser.email_user,
+                            token: foundedUser.token,
+                            rol: foundedUser.id_roll_user
+                        }
+                        return res.send({ code: "OK", msg: "USER_LOGIN_SUCCESS", user: user });
                     })
                     .catch((err) => {
                         res.send({ code: "ERROR", msg: "ERROR_MISMATCH_PASSWORD" });
@@ -105,7 +117,7 @@ module.exports = {
             // Change token
             await User.updateOne({ email_user: foundedUser.email_user }).set({token: newToken});    
         } else {
-            res.send({ code: "OK", msg: "USER_NOT_FOUND" });
+            return res.send({ code: "OK", msg: "USER_NOT_FOUND" }); ;
         }
     },
 

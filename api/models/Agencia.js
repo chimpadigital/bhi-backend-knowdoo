@@ -21,9 +21,10 @@ module.exports = {
     nombre_vendedor:{ type: 'string', required: true },
     direccion_vendedor:{ type: 'string', required: true },
     telefono_agencia:{ type: 'number', required: true },
-    facebook_agencia:{ type: 'string', required: true },
-    twitter_agencia:{ type: 'string', required: true },
-    instagram_agencia:{ type: 'string', required: true },
+    facebook_agencia:{ type: 'string', required: false },
+    twitter_agencia:{ type: 'string', required: false },
+    instagram_agencia:{ type: 'string', required: false },
+    razon_social:{ type: 'string', required: false },
 
 
     //  ╔═╗╔╦╗╔╗ ╔═╗╔╦╗╔═╗

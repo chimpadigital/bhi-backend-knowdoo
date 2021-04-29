@@ -32,6 +32,7 @@ module.exports = {
                     facebook_agencia: data.facebook,
                     twitter_agencia: data.twitter,
                     instagram_agencia: data.instagram,
+                    razon_social: data.razonSoc,
                     id_user: createdUser.id,
                 }).fetch(); 
                 //Actualizar token con id de user y enviar email
@@ -98,6 +99,7 @@ module.exports = {
                     facebook_agencia: data.facebook,
                     twitter_agencia: data.twitter,
                     instagram_agencia: data.instagram,
+                    razon_social: data.razonSoc,
                     id_user: createdUser.id,
                 }).fetch(); 
                 //Actualizar token con id de user y enviar email
@@ -139,6 +141,7 @@ module.exports = {
                 facebook_agencia: data.facebook,
                 twitter_agencia: data.twitter,
                 instagram_agencia: data.instagram,
+                razon_social: data.razonSoc,
                 id_user: existUser.id,
             }).fetch(); 
             //Enviar email
@@ -345,7 +348,8 @@ module.exports = {
                 telefono_agencia: data.telefono,  
                 facebook_agencia: data.facebook,
                 twitter_agencia: data.twitter,
-                instagram_agencia: data.instagram,          
+                instagram_agencia: data.instagram, 
+                razon_social: data.razonSoc,         
             });
             if(updatedRecords !== null && updatedRecords !== undefined) {
                 return res.send({ code: "OK", msg: "AGENCY_EDIT_SUCCESS" });
@@ -380,7 +384,8 @@ module.exports = {
                 telefono_agencia: data.telefono,  
                 facebook_agencia: data.facebook,
                 twitter_agencia: data.twitter,
-                instagram_agencia: data.instagram,          
+                instagram_agencia: data.instagram, 
+                razon_social: data.razonSoc,         
             });
             if(updatedRecords !== null && updatedRecords !== undefined) {
                 return res.send({ code: "OK", msg: "AGENCY_EDIT_SUCCESS" });
@@ -410,7 +415,8 @@ module.exports = {
             telefono_agencia: data.telefono,  
             facebook_agencia: data.facebook,
             twitter_agencia: data.twitter,
-            instagram_agencia: data.instagram,          
+            instagram_agencia: data.instagram,     
+            razon_social: data.razonSoc,     
         });
         if(updatedRecords !== null && updatedRecords !== undefined) {
             return res.send({ code: "OK", msg: "AGENCY_EDIT_SUCCESS" });
