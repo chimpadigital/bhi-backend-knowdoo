@@ -5,33 +5,49 @@ module.exports = {
     create: async function(req, res) {
         const id_paquete = req.body.id_paquete;
         const data = req.body.imagenes;
+        var tipo = data[0].nivel;
         
         //preguntar por el id del paquete, si existe comprobarlo
         var paquete = await Paquete.findOne({id: parseInt(id_paquete )});
         if(paquete === null || paquete === undefined) {
             return res.badRequest("El paquete turístico no está registrado en la BD.");    
-        } else { //Registrar imágenes
+        } else { 
+            //eliminar imagenes anteriores
+            var imagenes = await  Imagen.find().where({id_paquete: req.param('id_paquete'), nivel: tipo}); 
+            for(var x = 0; x < imagenes.length; x++) {
+                var nombre_imagen = imagenes[x].nombre;
+                if(nombre_imagen !== ""){
+                    await fs.unlink('pictures/'+nombre_imagen);   //código para eliminar fisicamente la imagen
+                }
+            }
+            await Imagen.destroy({id_paquete:req.param('id_paquete'), nivel: tipo});
+            //Registrar imágenes
             for(var x = 0; x < data.length; x++) {
                 //guardar imagen fisica
                 var date =  new Date();
                 var namePhoto  = 'pack' + paquete.id +'_'+ date.getTime();
                 var filepath = base64Img.imgSync(data[x].imagen, 'pictures', namePhoto); // pictures it is folder so save image
+                var name = filepath.substr(
+                    Math.max(
+                        filepath.lastIndexOf('\\'),
+                        filepath.lastIndexOf('/'),
+                    ) + 1,
+                );    
                 //guardar en BD  
                 if(filepath !== null && filepath !== undefined) {
                     var registro = await Imagen.create({
-                        nombre: namePhoto,
-                        ext: data[x].ext,
+                        nombre: name,                        
                         nivel: data[x].nivel,
                         id_paquete: id_paquete,                             
                     }).fetch(); 
                     if(registro === null || registro === undefined){
                         //Eliminar fisicamente la imagen creada
-                        await fs.unlink('pictures/'+namePhoto+'.'+data[x].ext);                               
+                        await fs.unlink('pictures/'+name);                               
                     }
                 }                  
             }
-        }
-        return res.send({ code: "OK", msg: "IMAGENES_SAVED" });          
+            return res.send({ code: "200", msg: "IMAGENES_SAVED" }); 
+        }                 
     }, 
 
     //obtener la imagen por id o por nombre
@@ -71,23 +87,12 @@ module.exports = {
         var tipo = req.param('tipo');
         var imagenes = []; 
         if(tipo !== null && tipo !== undefined){
-            if(tipo === '1') { //imagenes del paquete
-               imagenes = await  Imagen.find()
+           imagenes = await  Imagen.find()
                     .where({
                         id_paquete: req.param('id_paquete'),
-                        nivel: 0,
+                        nivel: req.param('tipo'),
                     });
-            } else {
-                if(tipo === '2') { //imagenes del itinerario del paquete
-                    imagenes = await  Imagen.find()
-                         .where({
-                             id_paquete: req.param('id_paquete'),
-                             nivel: 1,
-                         });
-                } else { //todas las imagenes del paquete
-                    imagenes = await  Imagen.find().where({id_paquete: req.param('id_paquete')});
-                }
-            }            
+                   
         } else { //si tipo no está definido se devuelven todas imagenes del paquete
             imagenes = await  Imagen.find().where({id_paquete: req.param('id_paquete')});
         }
@@ -96,10 +101,16 @@ module.exports = {
             for(var x = 0; x < imagenes.length; x++) {
                 var value  = imagenes[x];
                 var imagen = "";
-                if(value.nombre !=="" && value.ext !==""){
-                    imagen = base64Img.base64Sync('pictures/'+value.nombre+'.'+value.ext);
+                if(value.nombre !==""){
+                    try{
+                        imagen = base64Img.base64Sync('pictures/'+value.nombre);
+                    }catch(err){
+                        imagen = '';
+                    }
+                   
                 }
                 var item = {
+                    id: value.id,
                     nombre_imagen: value.nombre,
                     ext_imagen: value.ext,
                     id_paquete: value.id_paquete,
@@ -150,10 +161,9 @@ module.exports = {
     deletePicture: async function(req, res) {
         var registro = await Imagen.findOne({id: parseInt(req.param('id') )});
         if(registro !== null && registro !== undefined) {
-            var nombre_imagen = registro.nombre;
-            var ext = registro.ext;
-            if(nombre_imagen !== "" && ext !== ""){
-                await fs.unlink('pictures/'+nombre_imagen+'.'+ext);
+            var nombre_imagen = registro.nombre;            
+            if(nombre_imagen !== ""){
+                await fs.unlink('pictures/'+nombre_imagen);
             }  
             await Imagen.destroyOne({id: parseInt(req.param('id'))});  
             return res.send({ code: "OK", msg: "IMAGE_DELETE_SUCCESS" });                           

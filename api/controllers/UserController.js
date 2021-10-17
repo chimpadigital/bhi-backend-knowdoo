@@ -82,42 +82,44 @@ module.exports = {
         if(foundedUser !== null && foundedUser !== undefined) {
             var newToken = jwToken.issue({ id: foundedUser.id });
             User.comparePassword(data.password, foundedUser.password_user)
-                .then(() => {
+                .then( async () => {
                     //console.log('estado del usuario: '+ )
                     if(foundedUser.id_estado_user == 2) {  // Inactivo
-                        return res.send({ code: "OK", msg: "USER_IS_INACTIVE" });    
+                        return res.send({ code: "401", msg: "USER_IS_INACTIVE" });    
                     }
+                    var userUp = await User.updateOne({ email_user: foundedUser.email_user }).set({token: newToken}); 
                     var user = {
-                        id: foundedUser.id,
-                        email: foundedUser.email_user,
-                        token: foundedUser.token,
-                        rol: foundedUser.id_roll_user
+                        id: userUp.id,
+                        email: userUp.email_user,
+                        token: userUp.token,
+                        rol: userUp.id_roll_user
                     }
-                    return res.send({ code: "OK", msg: "USER_LOGIN_SUCCESS", user: user });
+                    return res.send({ code: "200", msg: "USER_LOGIN_SUCCESS", user: user });
                 })
                 .catch((err) => {
                     // Compare with temporal password
                     User.comparePassword(data.password, foundedUser.password_user_temp)
-                    .then(() => {
+                    .then(async () => {
                         if(foundedUser.id_estado_user == 2) {  // Inactivo
-                            return res.send({ code: "OK", msg: "USER_IS_INACTIVE" });    
+
+                            //return res.send({ code: "401", msg: "USER_IS_INACTIVE" });    
                         }
+                        var userUp = await User.updateOne({ email_user: foundedUser.email_user }).set({token: newToken});
                         var user = {
-                            id: foundedUser.id,
-                            email: foundedUser.email_user,
-                            token: foundedUser.token,
-                            rol: foundedUser.id_roll_user
-                        }
-                        return res.send({ code: "OK", msg: "USER_LOGIN_SUCCESS", user: user });
+                            id: userUp.id,
+                            email: userUp.email_user,
+                            token: userUp.token,
+                            rol: userUp.id_roll_user
+                        }                         
+                        return res.send({ code: "200", msg: "USER_LOGIN_SUCCESS", user: user });
                     })
                     .catch((err) => {
-                        res.send({ code: "ERROR", msg: "ERROR_MISMATCH_PASSWORD" });
+                        res.send({ code: "401", msg: "Unauthorized Error" });
                     });
                 });
-            // Change token
-            await User.updateOne({ email_user: foundedUser.email_user }).set({token: newToken});    
+            // Change token               
         } else {
-            return res.send({ code: "OK", msg: "USER_NOT_FOUND" }); ;
+            return res.send({ code: "401", msg: "Unauthorized Error" }); ;
         }
     },
 
@@ -144,13 +146,13 @@ module.exports = {
                 } else {
                     await User.updateOne({email_user: existUser.email_user})
                         .set({password_user_temp: existUser.password_user_temp});
-                    res.send({ code: "ERROR", msg: "ERROR_CHANGE_PASSWORD" });     
+                    res.send({ code: "403", msg: "ERROR_CHANGE_PASSWORD" });     
                 } 
             } else {
-                res.send({ code: "ERROR", msg: "ERROR_CREATE_PASSWORD" }); 
+                res.send({ code: "403", msg: "ERROR_CREATE_PASSWORD" }); 
             }
         } else {
-            res.send({ code: "OK", msg: "USER_NOT_FOUND" });    
+            res.send({ code: "401", msg: "USER_NOT_FOUND" });    
         }
     },
 
@@ -158,7 +160,7 @@ module.exports = {
         const data = req.body;
         var existUser = await User.findOne({ email_user: data.email });
         if(existUser === null || existUser === undefined) {
-            return res.badRequest("No account with that email address exists.");    
+            return res.send({ code: "401", msg: "USER_NOT_FOUND" });    
         } 
         var token = jwToken.issue({ id: existUser.id });
        
@@ -167,8 +169,8 @@ module.exports = {
                token: token,               
             }); 
         if(exitUser) {
-            var link = data.link + '/reset?token='+token;
-            Mailer.sendPasswordToken(exitUser.email_user, link, res);    
+            var link = data.link + '?token='+token;
+            Mailer.sendPasswordToken(exitUser.email_user, link, res);            
         } else {
             return res.serverError("Something went wrong");
         }
@@ -182,7 +184,7 @@ module.exports = {
         });  
         var user = await User.findOne({ token: req.param('token') });
             if(user !== null && user !== undefined) {
-                res.send({ code: "OK", msg: "TOKEN_VALID" });   
+                res.send({ code: "200", msg: "TOKEN_VALID" });   
             } else {
                 res.send({ code: "401", msg: "TOKEN_INVALID" });   
             }         
@@ -205,12 +207,12 @@ module.exports = {
                     token: '',                    
                 }); 
             if(user) {
-                return res.send({ code: "OK", msg: "CHANGE_PASSWORD_SUCCESS" })    
+                return res.send({ code: "200", msg: "CHANGE_PASSWORD_SUCCESS" })    
             } else {
-                return res.send({ code: "ERROR", msg: "ERROR_CHANGE_PASSWORD" });
+                return res.send({ code: "403", msg: "ERROR_CHANGE_PASSWORD" });
             }  
         } else {
-            res.send({ code: "ERR", msg: "USER_NOT_FOUND" });   
+            res.send({ code: "401", msg: "USER_NOT_FOUND" });   
         }
 
     },
@@ -226,17 +228,29 @@ module.exports = {
                 var updatedUser = await User.updateOne({ email_user: foundedUser.email_user })
                     .set({password_user: newPassword, password_user_temp: ""});
                 if(updatedUser) {
-                    return res.send({ code: "OK", msg: "CHANGE_PASSWORD_SUCCESS" })   
+                    return res.send({ code: "200", msg: "CHANGE_PASSWORD_SUCCESS" })   
                 } else {
-                    return res.send({ code: "ERROR", msg: "ERROR_CHANGE_PASSWORD" });     
+                    return res.serverError("Something went wrong");    
                 }
             } else {
-                return res.send({ code: "ERROR", msg: "ERROR_CREATE_PASSWORD" }); 
+                return res.serverError("Something went wrong"); 
             }
         } else {
-            return res.send({ code: "OK", msg: "USER_NOT_FOUND" });    
+            return res.send({ code: "401", msg: "USER_NOT_FOUND" });    
         }
 
+    },
+
+    getTotalNewUsers: async function(req, res, next) { 
+        //var data = new Date(moment().subtract(30, 'days'));
+        var total = await User.count()
+            .where({'id_estado_user':1, 'id_roll_user':2 });
+           // .where({'updatedAt':{">":data}, 'id_estado_user':1, 'id_roll_user':2 });
+        if(total !== null && total !== undefined) {
+            return res.json(total);
+        } else {
+            return res.serverError("Something went wrong"); 
+        }
     },
   
 

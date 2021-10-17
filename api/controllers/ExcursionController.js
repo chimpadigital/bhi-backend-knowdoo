@@ -15,8 +15,8 @@ module.exports = {
         for(var x = 0; x < excursiones.length; x++) {
             var value  = excursiones[x];
             var imagen = "";
-            if(value.imagen_excursion !=="" && value.ext_imagen !==""){
-                imagen = base64Img.base64Sync('pictures/'+value.imagen_excursion+'.'+value.ext_imagen);
+            if(value.imagen_excursion !==""){
+                imagen = base64Img.base64Sync('pictures/'+value.imagen_excursion);
             }
             var item = {
                 id: value.id,
@@ -24,8 +24,7 @@ module.exports = {
                 descripcion_excursion: value.descripcion_excursion,
                 observaciones_excursion: value.observaciones_excursion,
                 imagen_excursion: value.imagen_excursion,
-                imagen: imagen,                
-                ext_imagen: value.ext_imagen,
+                imagen: imagen,                                
                 id_paquete: value.id_paquete,
             };
             list.push(item);
@@ -94,10 +93,9 @@ module.exports = {
             .where({id: { in: data}}); 
         for(var x = 0; x < excursiones.length; x++) {
             var nombre_imagen = excursiones[x].imagen_excursion;
-            var ext = excursiones[x].ext_imagen;
-            if(nombre_imagen !== "" && ext !==""){
+            if(nombre_imagen !== ""){
                 //código para eliminar fisicamente la imagen anterior
-                await fs.unlink('pictures/'+nombre_imagen+'.'+ext);   
+                await fs.unlink('pictures/'+nombre_imagen);   
             }
         }
        await Excursion.destroy( {id: { in: data} }); 
@@ -113,32 +111,40 @@ module.exports = {
         if(paquete === null || paquete === undefined) {
             return res.badRequest("El paquete turístico no está registrado en la BD.");    
         } else { //Registrar excursiones
-            for(var x = 0; x < data.length; x++) {
+            var list = [];
+            for(var x = 0; x < data.length; x++) {                
                 var registro = await Excursion.create({
                     titulo_excursion: data[x].titulo,
                     descripcion_excursion: data[x].descripcion,
                     observaciones_excursion: data[x].observaciones,  
                     id_paquete: id_paquete,
                 }).fetch();
+                list.push(registro.id);
                 //Trabajar la imagen
                 if(data[x].imagen!== null && data[x].imagen !== undefined && data[x].imagen !=='') {
                     var date =  new Date();
                     var namePhoto  = 'excursion' + registro.id +'_'+ date.getTime();
                     var filepath = base64Img.imgSync(data[x].imagen, 'pictures', namePhoto); // pictures it is folder so save image
+                     
                     if(filepath !== null && filepath !== undefined) {
+                        var name = filepath.substr(
+                            Math.max(
+                                filepath.lastIndexOf('\\'),
+                                filepath.lastIndexOf('/'),
+                            ) + 1,
+                        );  
                         var upRegister = await Excursion.updateOne({ id: registro.id }).set({
-                            imagen_excursion: namePhoto,    
-                            ext_imagen: data[x].ext,                            
+                            imagen_excursion: name                                                      
                         }); 
                         if(upRegister === null || upRegister === undefined){
                             //Incorporar código para eliminar fisicamente la imagen creada
-                            await fs.unlink('pictures/'+namePhoto+'.'+data[x].ext);                               
+                            await fs.unlink('pictures/'+name);                               
                         }
                     }
                 }
             }
-        }
-        return res.send({ code: "OK", msg: "EXCURSIONES_CREATED" });          
+            return res.send({ code: "OK", msg: "EXCURSIONES_CREATED", list: list }); 
+        }                 
     }, 
 
     getPicture: async function(req, res) {

@@ -4,7 +4,10 @@
  * @description :: Server-side actions for handling incoming requests.
  * @help        :: See https://sailsjs.com/docs/concepts/actions
  */
-
+var base64Img = require('base64-img');
+var path = require('path');
+const fs = require('fs').promises;
+var fsd = require('fs');
 
 module.exports = {
   
@@ -35,31 +38,49 @@ module.exports = {
                     razon_social: data.razonSoc,
                     id_user: createdUser.id,
                 }).fetch(); 
-                //Actualizar token con id de user y enviar email
                 if(createdAgencia !== null && createdAgencia !== undefined) {
-                    // Set token del user
-                    createdUser = await User.updateOne({ id: createdUser.id })
+                    //Trabajar la imagen                    
+                    var uploadFile = req.file('imagen');
+                    await uploadFile.upload({ dirname: '../../pictures'},function onUploadComplete(err, files) {  
+                        if (err) {
+                            return res.serverError(err);  // IF ERROR Return and send 500 error with error
+                        } 
+                        if(files[0] !== undefined){
+                            var pathfile = files[0].fd;
+                            var name = pathfile.substr(
+                                Math.max(
+                                    pathfile.lastIndexOf('\\'),
+                                    pathfile.lastIndexOf('/'),
+                                ) + 1,
+                            );     
+                            Agencia.updateOne({ id: createdAgencia.id }).set({
+                                imagen_agencia: name,
+                            }).exec((err, update)=>  {
+                                if (err) {                                    
+                                    return res.serverError(err);
+                                }                          
+                            });  
+                        }
+                    });
+                    //Actualizar token con id de user y enviar email
+                    var createdUser = await User.updateOne({ id: createdUser.id })
                         .set({token: jwToken.issue({ id: createdUser.id })});
                     // Send email de notifcación al usuario creado
-                    var notificacion = {
-                        email: createdUser.email_user,
-                        msg: 'Usted se ha registrado en el Sistema BIH Viajes. Espere un correo de confirmación para usar sus credenciales.',
-                    };
-                    Mailer.sendNotificacionMail(notificacion, res); 
-                    // Send email de notifcación al administrador del sitio
                     var adminUser = await User.findOne({ id: 1 });
                     var notificacion = {
-                        email: adminUser.email_user,
-                        msg: 'Una Agencia nueva se ha registrado en el sitio y espera confirmación.',
+                        emailUser: createdUser.email_user,
+                        msgUser: 'Usted se ha registrado en el Sistema BHI Viajes. Espere un correo de confirmación para usar sus credenciales.',
+                        emailAdmin: adminUser.email_user,
+                        msgAdmin: 'Una Agencia nueva se ha registrado en el sitio y espera confirmación.',
                     };
-                    Mailer.sendNotificacionMail(notificacion, res); 
+                    Mailer.sendNotificacionMailAdminUser(notificacion, res);                   
                 } else {
                     await User.destroyOne({id: createdUser.id});
                     return res.serverError("Something went wrong"); 
                 }    
             } 
         } else {
-            return res.send({ code: "ERR", msg: "USER_EMAIL_EXIST" });
+            return res.send({ code: "403", msg: "USER_EMAIL_EXIST" });
         }
     },
 
@@ -162,7 +183,7 @@ module.exports = {
         if(state === null || state === undefined) {
             return res.badRequest("El identificador del estado no existe en la BD");    
         }
-
+        //No se actualiza ele stado del usuario error
         var updatedAgency = await Agencia.updateOne({ id: data.id }).set({
             id_estado: state.id
         });
@@ -193,7 +214,7 @@ module.exports = {
                     if (updatedUser !== null && updatedUser !== undefined){
                         var notificacion = {
                             email: updatedAgency.email_agencia,
-                            msg: 'Su registro ha sido aceptado en BIH Viajes. Utilice sus credenciales para ingresar al Sistema',
+                            msg: 'Su registro ha sido aceptado en BHI Viajes. Utilice sus credenciales para ingresar al Sistema.',     
                         };
                         Mailer.sendNotificacionMail(notificacion, res); 
                     } else {
@@ -203,11 +224,55 @@ module.exports = {
                     return res.serverError("Something went wrong");
                 }   
             } else {
-                return res.send({ code: "ERR", msg: "AGENCY_NOT_FOUND" });  
+                return res.send({ code: "403", msg: "AGENCY_NOT_FOUND" });  
             }                                       
         } else {
-            return res.send({ code: "ERR", msg: "AGENCY_CHANGE_STATE_ERROR" });
+            return res.serverError("Something went wrong");
         }                
+    },
+
+    aprobarAgencias: async function(req, res, next) {
+        const data = req.body;
+        var agencias = await Agencia.find()
+            .where({id: { in: data}}); 
+        var correos = [];
+        for(var x = 0; x < agencias.length; x++) {
+            //cambiar el estado de la agencia a Activo
+            var updatedAgency = await Agencia.updateOne({ id: agencias[x].id }).set({
+                id_estado: 1
+            });            
+            if(updatedAgency !== null && updatedAgency !== undefined) {
+                updatedAgency = await Agencia.findOne({ id: agencias[x].id });
+                if(updatedAgency !== null && updatedAgency !== undefined) {
+                    //cambiAr el estado del usuario a activo
+                    var user = await User.findOne({id: updatedAgency.id_user});
+                    if (user !== null && user !== undefined){
+                        var updatedUser = await User.updateOne({ id: user.id }).set({
+                            id_estado_user: 1
+                        });
+                        //enviar notificacion por email
+                        if (updatedUser !== null && updatedUser !== undefined){
+                            correos.push(updatedAgency.email_agencia);
+                            
+                        } else {
+                            return res.serverError("Something went wrong");   
+                        }
+                    } else {
+                        return res.serverError("Something went wrong");
+                    }   
+                } else {
+                    return res.send({ code: "403", msg: "AGENCY_NOT_FOUND" });  
+                }                                       
+            } else {
+                return res.serverError("Something went wrong");
+            }   
+        } 
+        var notificacion = {
+            email: correos,
+            msg: 'Su registro ha sido aceptado en BHI Viajes. Utilice sus credenciales para ingresar al Sistema.',
+        };
+        await Mailer.sendNotificacionMailAll(notificacion, res);
+        return res.send({ code: "200", msg: "AGENCIES_ACEPTED" });            
     },
 
     rechazarAgency: async function(req, res, next) {
@@ -217,17 +282,23 @@ module.exports = {
             var email = deleteAgency.email_agencia;
             var idUser  = deleteAgency.id_user.id;
             var idAgencia = deleteAgency.id;
+            //eliminar imagen del sistema de archivos
+            if(deleteAgency.imagen_agencia!==null || deleteAgency.imagen_agencia !=='') {
+                fs.unlink('pictures/'+deleteAgency.imagen_agencia, (err => {
+                    if (err) console.log(err);                            
+                }));
+            }
             await Agencia.destroyOne({id: idAgencia}); //eliminar agencia
             await User.destroyOne({id: idUser}); //eliminar usuario
             //enviar correo de notificacion
             var notificacion = {
                 email: email,
-                msg: 'Su registro no ha sido aceptado en BIH Viajes. Sus datos han sido eliminados del Sistema.',
+                msg: 'Su registro no ha sido aceptado en BHI Viajes. Sus datos han sido eliminados del Sistema.',                
             };
             Mailer.sendNotificacionMail(notificacion, res); 
 
         } else {
-            return res.send({ code: "ERR", msg: "AGENCY_NOT_FOUND" });
+            return res.send({ code: "403", msg: "AGENCY_NOT_FOUND" });
         }
     },
 
@@ -242,8 +313,8 @@ module.exports = {
     },
 
     accepted: async function(req, res, next) {
-        var list = await Agencia.find().where({'id_estado': 1})
-            .sort('nombre_agencia ASC').populate('id_user').populate('id_estado');
+        var list = await Agencia.find({ where: {id_estado:1},
+            select: ['nombre_agencia'] }).sort('nombre_agencia ASC');
         if(list !== null && list !== undefined) {
             return res.json(list);
         } else {
@@ -252,10 +323,12 @@ module.exports = {
     },
 
     pending: async function(req, res, next) {
-        var list = await Agencia.find().where({'id_estado': 2})
-            .sort('id ASC').populate('id_user').populate('id_estado');
+        var list = await Agencia.find({ where: {id_estado:2},
+        select: ['nombre_agencia'] })
+        .limit(req.param('limite'))
+        .sort('id DESC');
         if(list !== null && list !== undefined) {
-            return res.json(list);
+            return res.json({count: list.length, list: list});
         } else {
             return res.serverError("Something went wrong"); 
         }
@@ -273,23 +346,45 @@ module.exports = {
 
     indexByName:async function(req, res, next) {
         const data = req.body;
-        var list = await Agencia.find().where({
+        var list = await Agencia.find({ 
+            select: ['nombre_agencia', 'imagen_agencia'] }).where({id_estado:data.estado,
             or: [
                 {'nombre_agencia': {contains: data.search}},
                 {'email_agencia': {contains: data.search}},
             ]
-        }).sort('nombre_agencia ASC').populate('id_user').populate('id_estado');
+        }).sort('nombre_agencia ASC');
         if(list !== null && list !== undefined) {
-            return res.json(list);
+            if(data.estado===2){
+                return res.json({count: list.length, list: lista});
+            }
+            lista = [];
+            for(var x = 0; x < list.length; x++) {
+                var nombre_imagen = list[x].imagen_agencia;
+                var code= '';
+                if(nombre_imagen !== ""){
+                    code = base64Img.base64Sync('pictures/'+nombre_imagen);                
+                }
+                var a = {
+                    id: list[x].id,
+                    nombre_agencia:list[x].nombre_agencia,
+                    imagen: code
+                }
+                lista.push(a);
+            }
+            return res.json({count: list.length, list: lista});
         } else {
             return res.serverError("Something went wrong"); 
         }
     },
 
     getAgency:async function(req, res, next) {
-        var agency = await Agencia.findOne(req.param('id')).populate('id_user').populate('id_estado');
+        var agency = await Agencia.findOne(req.param('id'));
         if(agency !== null && agency !== undefined) {
-            return res.json(agency);
+            var nombre_imagen = agency.imagen_agencia;
+            if(nombre_imagen !== ""){
+                var code = base64Img.base64Sync('pictures/'+nombre_imagen);                
+            }
+            return res.json({agencia: agency, imagen: code});
         } else {
             return res.serverError("Something went wrong"); 
         }
@@ -297,22 +392,31 @@ module.exports = {
 
     show: async function(req, res, next) { //devuelve la agencia del usuario autenticado
         token = req.headers.authorization;
-        var foundedUser = await User.findOne({ token: token.replace("Bearer ", "")})
-            .populate('id_roll_user').populate('id_estado_user');
+        var foundedUser = await User.findOne({ token: token.replace("Bearer ", "")});
         if(foundedUser !== null && foundedUser !== undefined) {
-            if(foundedUser.id_roll_user.nombre === 'Agencia'){
-                var agency = await Agencia.findOne().where({'id_user': foundedUser.id})
-                    .populate('id_user').populate('id_estado');
+            if(foundedUser.id_roll_user === 2){
+                var agency = await Agencia.findOne().where({'id_user': foundedUser.id});
                 if(agency !== null && agency !== undefined) {
-                    return res.json(agency);
+                    var nombre_imagen = agency.imagen_agencia;
+                    var code = '';
+                    if(nombre_imagen !== ""){
+                        
+                        try{
+                            code = base64Img.base64Sync('pictures/'+nombre_imagen); 
+                        }catch(err){
+                            code = '';
+                        }
+                                       
+                    }
+                    return res.json({agencia: agency, imagen: code});
                 } else {
                     return res.serverError("Something went wrong"); 
                 }
             } else {
-                return res.send({ code: "ERR", msg: "USER_WHITOUT_AGENCY" });
+                return res.send({ code: "403", msg: "USER_WHITOUT_AGENCY" });
             }            
         } else {
-            return res.send({ code: "ERR", msg: "USER_NOT_FOUND" }); 
+            return res.send({ code: "401", msg: "USER_NOT_FOUND" }); 
         }
     },
 
@@ -323,16 +427,16 @@ module.exports = {
         //Obtener usuario del token
         var foundedUser = await User.findOne({ token: token.replace("Bearer ", "")});
         if(foundedUser === null || foundedUser === undefined) {
-            return res.send({ code: "ERR", msg: "USER_NOT_FOUND" });    
+            return res.send({ code: "401", msg: "USER_NOT_FOUND" });    
         }
         //Obtener agencia 
         var agency = await Agencia.findOne({'id': data.id});
         if(agency === null || agency === undefined) {
-            return res.send({ code: "ERR", msg: "AGENCY_NOT_FOUND" });    
+            return res.send({ code: "403", msg: "AGENCY_NOT_FOUND" });    
         }
         //Verificar que la agencia sea del usuario autenticado
         if(agency.id_user !== foundedUser.id || foundedUser.id_estado_user === 2){
-            return res.send({ code: "ERR", msg: "NOT_AUTHORIZED" });    
+            return res.send({ code: "401", msg: "NOT_AUTHORIZED" });    
         }
         //Actualizar datos de usuario
         var updatedRecords = await User.updateOne({ id: foundedUser.id }).set({
@@ -352,12 +456,41 @@ module.exports = {
                 razon_social: data.razonSoc,         
             });
             if(updatedRecords !== null && updatedRecords !== undefined) {
-                return res.send({ code: "OK", msg: "AGENCY_EDIT_SUCCESS" });
+                //Trabajar la imagen                    
+                var uploadFile = req.file('imagen');
+                await uploadFile.upload({ dirname: '../../pictures'},function onUploadComplete(err, files) {  
+                    if (err) {
+                        return res.serverError(err);  // IF ERROR Return and send 500 error with error
+                    } 
+                    if(files[0] !== undefined){
+                        var pathfile = files[0].fd;
+                        var name = pathfile.substr(
+                            Math.max(
+                                pathfile.lastIndexOf('\\'),
+                                pathfile.lastIndexOf('/'),
+                            ) + 1,
+                        ); 
+                        //eliminar imagen del sistema de archivos
+                        if(agency.imagen_agencia!==null || agency.imagen_agencia !=='') {
+                            fs.unlink('pictures/'+agency.imagen_agencia, (err => {
+                                if (err) console.log(err);                            
+                            }));
+                        }
+                        Agencia.updateOne({ id: agency.id }).set({
+                            imagen_agencia: name,
+                        }).exec((err, update)=>  {
+                            if (err) {                                    
+                                return res.serverError(err);
+                            }                          
+                        });  
+                    }
+                });
+                return res.send({ code: "200", msg: "AGENCY_EDIT_SUCCESS" });
             } else {
-                return res.send({ code: "ERR", msg: "AGENCY_EDIT_ERROR" });
+                return res.serverError("Something went wrong");;
             };                 
         } else {
-            return res.send({ code: "ERR", msg: "USER_EDIT_ERROR" });
+            return res.serverError("Something went wrong");
         }
     },
 
@@ -435,5 +568,41 @@ module.exports = {
             return res.serverError("Something went wrong"); 
         }
     },
+
+    filterAgencia: async function(req, res, next) { //devuelve las agencias por filtros
+        const data = req.body;
+        var criterio = req.body.criterio; sails.log(data);
+        var estado = parseInt(req.body.estado);
+        var paqueteID = parseInt(req.body.paquete);
+        //var paqueteID = parseInt(req.param('paquete'));
+        /* var estado = req.param('estado');
+        var criterio = req.param('criterio'); */
+
+        var SELECT_RESERVAS = `SELECT
+        
+        agencia.id,
+        agencia.nombre_agencia
+        
+        FROM
+        reservacion
+        INNER JOIN paquete ON reservacion.id_paquete = paquete.id
+        INNER JOIN pasajero ON pasajero.id_reservacion = reservacion.id
+        INNER JOIN agencia ON reservacion.id_agencia = agencia.id
+        WHERE
+        (paquete.id_estado = 1 AND reservacion.id_paquete = $3 AND reservacion.estado = $1 ) AND        
+        (agencia.nombre_agencia = $2 OR paquete.destino = $2 OR pasajero.numero_documento = $2 OR
+            pasajero.nombre_pasajero = $2 )
+        
+        GROUP BY
+        agencia.nombre_agencia`;
+        
+        await sails.sendNativeQuery(SELECT_RESERVAS, [estado, criterio, paqueteID]).exec(async function(err, list) {
+            if (err) return res.serverError(err + "Something went wrong");            
+            
+            return res.json(list.rows); 
+           
+        });
+        
+    }, 
 }
 

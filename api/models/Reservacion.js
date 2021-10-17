@@ -13,17 +13,19 @@ module.exports = {
     //  ╠═╝╠╦╝║║║║║ ║ ║╚╗╔╝║╣ ╚═╗
     //  ╩  ╩╚═╩╩ ╩╩ ╩ ╩ ╚╝ ╚═╝╚═╝
     
-    cantidad_adultos:{ type: 'number', required: true },
-    cantidad_menores:{ type: 'number', required: true },
-    cantidad_bebes:{ type: 'number', required: false },
+    cantidad_adultos:{ type: 'string', required: true },
+    cantidad_menores:{ type: 'string', required: false },
+    cantidad_bebes:{ type: 'string', required: false },
 
-    cantidad_doble:{ type: 'number', required: false },
-    cantidad_individual:{ type: 'number', required: false },
-    cantidad_triple:{ type: 'number', required: false },
-    cantidad_cuadruple:{ type: 'number', required: false },
+    asientos_reservados:{ type: 'string', required: false },
 
-    cantidad_twin:{ type: 'number', required: false },
-    cantidad_matrimonial:{ type: 'number', required: false },
+    cantidad_doble:{ type: 'string', required: false },
+    cantidad_individual:{ type: 'string', required: false },
+    cantidad_triple:{ type: 'string', required: false },
+    cantidad_cuadruple:{ type: 'string', required: false },
+
+    cantidad_twin:{ type: 'string', required: false },
+    cantidad_matrimonial:{ type: 'string', required: false },
 
     codigo: { type: 'string', required: false },
     estado: { type: 'number', defaultsTo: 0 },
@@ -36,7 +38,7 @@ module.exports = {
     //  ╚═╝╩ ╩╚═╝╚═╝═╩╝╚═╝
 
     pasajeros: { collection: 'pasajero', via: 'id_reservacion' },
-    asientos_reservados: {collection: 'asientoReservado', via: 'id_reserva' },
+    //asientos_reservados: {collection: 'asientoReservado', via: 'id_reserva' },
 
     //  ╔═╗╔═╗╔═╗╔═╗╔═╗╦╔═╗╔╦╗╦╔═╗╔╗╔╔═╗
     //  ╠═╣╚═╗╚═╗║ ║║  ║╠═╣ ║ ║║ ║║║║╚═╗

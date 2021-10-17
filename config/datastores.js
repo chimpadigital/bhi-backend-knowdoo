@@ -50,12 +50,14 @@ module.exports.datastores = {
     ***************************************************************************/
     // adapter: 'sails-mysql',
     // url: 'mysql://user:password@host:port/database',
-
+    adapter: 'sails-mysql',    
+    url: 'mysql://root:root@localhost:3306/bhi_dev'   //(password para el server)
+  /*
     adapter: 'sails-mysql',
-    url: 'mysql://root:root@localhost:3306/bhi', //(password)
+    url: 'mysql://root@localhost:3306/bhi_dev'     //(no password bhi_dev)
 
-   /*  adapter: 'sails-mysql',
-    url: 'mysql://root@localhost:3306/bhi' */  //(no password)
+    /* adapter: 'sails-mysql',
+    url: 'mysql://root@localhost:3306/bhi'  */  //(no password Local)
 
   },
 

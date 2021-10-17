@@ -6,171 +6,84 @@
  */
 
 const fs = require('fs').promises;
+var base64Img = require('base64-img');
+const moment = require('moment');
 
 module.exports = {
     create: async function(req, res) {
         const data = req.body;
-        var id_destino = 0;
-        var id_hotel = 0;
-        
-        //preguntar por el id del destino, si existe comprobarlo
-        if(data.id_destino !== null && data.id_destino !== undefined && data.id_destino !== ''){
-            var id_destino = await Destino.findOne({id: parseInt(data.id_destino)});
-            if(id_destino === null || id_destino === undefined) {
-                return res.badRequest("El destino no existe en la BD.");    
-            } else {
-                id_destino = id_destino.id;
-            }
-        } else { //si no existe crearlo, solo con el nombre
-            if(data.destino !== null && data.destino !== undefined && data.destino !== ''){
-                var created = await Destino.create({
-                    nombre_destino: data.destino,
-                }).fetch(); 
-                if(created !== null && created !== undefined){
-                    id_destino = created.id;
-                }  else {
-                    return res.badRequest("No existe un destino para el paquete turístico.");
-                }
-            } else {
-                return res.badRequest("No existe un destino para el paquete turístico.");
-            }
-        }
-
-        //preguntar por el id del hotel, si existe comprobarlo
-        if(data.id_hotel !== null && data.id_hotel !== undefined && data.id_hotel !== ''){
-            var id_hotel = await Hotel.findOne({id: parseInt(data.id_hotel)});
-            if(id_hotel === null || id_hotel === undefined) {
-                return res.badRequest("El hotel no existe en la BD.");    
-            } else {
-                id_hotel = id_hotel.id;
-            }
-        } else { //si no existe crearlo, solo con el nombre y la categoria
-            if(data.hotel !== null && data.hotel !== undefined && data.hotel !== ''){
-                var created = await Hotel.create({
-                    nombre_hotel: data.hotel,
-                    categoria_hotel: data.categoria,
-                }).fetch(); 
-                if(created !== null && created !== undefined){
-                    id_hotel = created.id;
-                }  else {
-                    return res.badRequest("No existe un hotel para el paquete turístico.");
-                }
-            } else {
-                return res.badRequest("No existe un hotel para el paquete turístico.");
-            }
-        }
-        
-        //preguntar por el id del transporte, si existe comprobarlo
-        var id_transporte = await TipoTransporte.findOne({id: parseInt(data.id_transporte )});
-        if(id_transporte === null || id_transporte === undefined) {
-            return res.badRequest("El tipo de bus no está registrado en la BD.");    
-        } else {
-            id_transporte = id_transporte.id;
-        }
-
+        var fecha = new Date(data.fecha);
+          
         //registrar el objeto paquete
         var createdRegister = await Paquete.create({
             nombre_paquete: data.nombre,
+            descripcion: data.descripcion,
+            destino: data.destino,            
+            fecha: fecha,   
             cantidad_noches: data.noches,
             lugar_salida: data.salida,
-            fecha: data.fecha,
+            edad_desde:data.desde,
+            edad_hasta:data.hasta, 
+            properties_paquete: data.detalles,
+            id_tipoBus: data.transporte, 
+            asientos: data.asientos,  
+            id_hotel: data.hotel,
             observaciones_paquete: data.observaciones,
-            edad_desde:data.ageInic,
-            edad_hasta:data.ageEnd, 
-            properties_paquete: data.properties,
-            id_destino: id_destino,
-            id_hotel: id_hotel,
-            id_tipoBus: id_transporte,
-            id_estado: 1, 
+            titulo_observaciones: data.titulo_observaciones,
+            id_estado: data.estado, 
         }).fetch();
         if(createdRegister !== null && createdRegister !== undefined) {
-            return res.send({ code: "OK", msg: "PACK_CREATED" });     
+            return res.send({ code: "200", msg: "PACK_CREATED", data: createdRegister });     
         } else {
-            return res.send({ code: "ERR", msg: "PACK_NOT_CREATED" });
+            return res.serverError("Something went wrong");
         }             
     },
 
     update: async function(req, res) {
-        const data = req.body;
+        const data = req.body;     
+        var fecha = new Date(data.fecha); 
+             
         
-        var id_destino = 0;
-        var id_hotel = 0;
-        
-        //preguntar por el id del destino, si existe comprobarlo
-        if(data.id_destino !== null && data.id_destino !== undefined && data.id_destino !== ''){
-            var id_destino = await Destino.findOne({id: parseInt(data.id_destino)});
-            if(id_destino === null || id_destino === undefined) {
-                return res.badRequest("El destino no existe en la BD.");    
-            } else {
-                id_destino = id_destino.id;
-            }
-        } else { //si no existe crearlo, solo con el nombre
-            if(data.destino !== null && data.destino !== undefined && data.destino !== ''){
-                var created = await Destino.create({
-                    nombre_destino: data.destino,
-                }).fetch(); 
-                if(created !== null && created !== undefined){
-                    id_destino = created.id;
-                }  else {
-                    return res.badRequest("No existe un destino para el paquete turístico.");
-                }
-            } else {
-                return res.badRequest("No existe un destino para el paquete turístico.");
-            }
-        }
-
-        //preguntar por el id del hotel, si existe comprobarlo
-        if(data.id_hotel !== null && data.id_hotel !== undefined && data.id_hotel !== ''){
-            var id_hotel = await Hotel.findOne({id: parseInt(data.id_hotel)});
-            if(id_hotel === null || id_hotel === undefined) {
-                return res.badRequest("El hotel no existe en la BD.");    
-            } else {
-                id_hotel = id_hotel.id;
-            }
-        } else { //si no existe crearlo, solo con el nombre y la categoria
-            if(data.hotel !== null && data.hotel !== undefined && data.hotel !== ''){
-                var created = await Hotel.create({
-                    nombre_hotel: data.hotel,
-                    categoria_hotel: data.categoria,
-                }).fetch(); 
-                if(created !== null && created !== undefined){
-                    id_hotel = created.id;
-                }  else {
-                    return res.badRequest("No existe un hotel para el paquete turístico.");
-                }
-            } else {
-                return res.badRequest("No existe un hotel para el paquete turístico.");
-            }
-        }
-        
-        //preguntar por el id del transporte, si existe comprobarlo
-        var id_transporte = await TipoTransporte.findOne({id: parseInt(data.id_transporte )});
-        if(id_transporte === null || id_transporte === undefined) {
-            return res.badRequest("El tipo de bus no está registrado en la BD.");    
-        } else {
-            id_transporte = id_transporte.id;
-        }
-
         //actualizar el objeto paquete 
         var updatedRegister = await Paquete.updateOne({ id: data.id }).set({
             nombre_paquete: data.nombre,
+            descripcion: data.descripcion,
+            destino: data.destino,            
+            fecha: fecha,   
             cantidad_noches: data.noches,
             lugar_salida: data.salida,
-            fecha: data.fecha,
+            edad_desde:data.desde,
+            edad_hasta:data.hasta, 
+            properties_paquete: data.detalles,
+            id_tipoBus: data.transporte, 
+            asientos: data.asientos,  
+            id_hotel: data.hotel,
             observaciones_paquete: data.observaciones,
-            edad_desde:data.ageInic,
-            edad_hasta:data.ageEnd, 
-            properties_paquete: data.properties,
-            id_destino: id_destino,
-            id_hotel: id_hotel,
-            id_tipoBus: id_transporte,             
+            titulo_observaciones: data.titulo_observaciones, 
+            id_estado: data.estado           
         });
         if(updatedRegister !== null && updatedRegister !== undefined) {
-            return res.send({ code: "OK", msg: "PACK__EDIT_SUCCESS" });     
+            return res.send({ code: "200", msg: "PACK_EDIT_SUCCESS" });     
         } else {
-            return res.send({ code: "ERR", msg: "PACK_EDIT_ERROR" });
+            return res.serverError("Something went wrong");
         }             
     },
+
+    updateObservaciones: async function(req, res) {
+        const data = req.body;  
+        //actualizar el objeto paquete 
+        var updatedRegister = await Paquete.updateOne({ id: data.id }).set({
+            observaciones_paquete: data.observaciones,
+            titulo_observaciones: data.titulo_observaciones,            
+        });
+        if(updatedRegister !== null && updatedRegister !== undefined) {
+            return res.send({ code: "200", msg: "PACK_EDIT_SUCCESS" });     
+        } else {
+            return res.serverError("Something went wrong");
+        }             
+    },
+
+   
 
     changeEstado: async function(req, res, next) {
         const data = req.body;
@@ -196,10 +109,9 @@ module.exports = {
             .where({id_paquete: req.param('id')}); 
         for(var x = 0; x < imagenes.length; x++) {
             var nombre_imagen = imagenes[x].nombre;
-            var ext = imagenes[x].ext;
-            if(nombre_imagen !== "" && ext !==""){
+            if(nombre_imagen !== ""){
                 //código para eliminar fisicamente la imagen
-                await fs.unlink('pictures/'+nombre_imagen+'.'+ext);   
+                await fs.unlink('pictures/'+nombre_imagen);   
             }
         }
         //Obtener imágenes de las excursiones y eliminarlas
@@ -207,13 +119,19 @@ module.exports = {
             .where({id_paquete: req.param('id')}); 
         for(var x = 0; x < excursiones.length; x++) {
             var nombre_imagen = excursiones[x].imagen_excursion;
-            var ext = excursiones[x].ext_imagen;
-            if(nombre_imagen !== "" && ext !==""){
+            if(nombre_imagen !== "" ){
                 //código para eliminar fisicamente la imagen
-                await fs.unlink('pictures/'+nombre_imagen+'.'+ext);   
+                await fs.unlink('pictures/'+nombre_imagen);   
             }
         }
-
+        //Obtener imagen del hotel
+        var paquete = await Paquete.findOne(req.param('id'))
+        var hotel = await  Hotel.findOne(paquete.id_hotel); 
+        var nombre_imagen = hotel.imagen_hotel;
+        if(nombre_imagen !== "" ){
+            await fs.unlink('pictures/'+nombre_imagen);   
+        }
+        
         //Eliminar reservaciones del paquete
         var reservas = await Reservacion.find({ where: {id_paquete:req.param('id')},
                                                 select: ['comprobante'] });
@@ -225,28 +143,46 @@ module.exports = {
             }     
             //eliminar archivos de pasajeros
             var archivos = await  Pasajero.find({ where: {id_reservacion:reserva.id},
-                                                select: ['comprobante', 'ficha_medica','imagen_documento'] });
+                                                select: ['comprobante'] });
             for(var y = 0; y < archivos.length; y++) {
                 var archivo = archivos[y];
-                if(archivo.imagen_documento !== null && archivo.imagen_documento !== undefined && archivo.imagen_documento !== "") {
-                    await fs.unlink("documents/"+archivo.imagen_documento); 
-                }   
-                if(archivo.ficha_medica !== null && archivo.ficha_medica !== undefined && archivo.ficha_medica !== "") {
-                    await fs.unlink("documents/"+archivo.ficha_medica); 
-                }
                 if(archivo.comprobante !== null && archivo.comprobante !== undefined && archivo.comprobante !== "") {
                     await fs.unlink('comprobantes/'+archivo.comprobante); 
-                }                      
+                } 
+                //eliminar documentos de Pasajero
+                var docs = await  Documentos.find({ where: {pasajero:archivo.id},
+                                                            select: ['nombre'] });
+                for(let i=0; i<docs.length; i++) {
+                    //eliminar fichero
+                    if(docs[i].nombre !== null && docs[i].nombre !== undefined && docs[i].nombre !== "") {
+                        await fs.unlink("documents/"+docs[i].nombre); 
+                    } 
+                    //actualizar BD
+                    await Documentos.destroyOne({ id: docs[i].id });
+                } 
+                //eliminar ficha médica de pasajero
+                var fichas = await  FichaMedica.find({ where: {pasajero:archivo.id},
+                                                        select: ['nombre'] });
+                for(let i=0; i<fichas.length; i++) {
+                    //eliminar fichero
+                    if(fichas[i].nombre !== null && fichas[i].nombre !== undefined && fichas[i].nombre !== "") {
+                        await fs.unlink("documents/"+fichas[i].nombre); 
+                    } 
+                    //actualizar BD
+                    await FichaMedica.destroyOne({ id: fichas[i].id });
+                }                    
             }
             await Pasajero.destroy({id_reservacion: reserva.id});   
             //Eliminar los registros de la BD
-            await AsientoReservado.destroy({id_reserva: reserva.id});
             await Reservacion.destroyOne({id:reserva.id});               
         }     
         //Eliminar los registros de la BD
         await Imagen.destroy({id_paquete:req.param('id')}); ////eliminar imágenes del paquete
         await Actividad.destroy({id_paquete:req.param('id')});//eliminar itinerario del paquete
+        await ExcursionOpcional.destroy({id_paquete:req.param('id')});//eliminar excursiones opcionales del paquete
         await Excursion.destroy({id_paquete:req.param('id')});//eliminar excursiones del paquete
+        await Habitacion.destroy({id_hotel: paquete.id_hotel});
+        await Hotel.destroy({id:paquete.id_hotel});        
         await Paquete.destroyOne({id:req.param('id')});         
         return res.send({ code: "OK", msg: "PACK_DELETE_SUCCESS" });       
      },
@@ -255,12 +191,7 @@ module.exports = {
 
     show:async function(req, res, next) {
         var paquete = await Paquete.findOne(req.param('id'))
-            .populate('id_destino')
-            .populate('id_hotel')
-            .populate('id_tipoBus')
-            .populate('itinerario')
-            .populate('excursiones')
-            .populate('imagenes');
+        .populate('id_tipoBus');            
         if(paquete !== null && paquete !== undefined) {
             return res.json(paquete);
         } else {
@@ -268,9 +199,9 @@ module.exports = {
         }
     }, 
 
-    packs: async function(req, res, next) { //devuelve ls apquetes publicados (estado 1)
+    packs: async function(req, res, next) { //devuelve ls apquetes publicados (estado 1) con imagen
         var list = await Paquete.find().where({'id_estado': 1}).sort('nombre_paquete ASC')
-            .populate('id_destino')
+            //.populate('id_destino')
             .populate('id_hotel')
             .populate('id_tipoBus')
             .populate('itinerario')
@@ -278,6 +209,109 @@ module.exports = {
             .populate('imagenes');
         if(list !== null && list !== undefined) {
             return res.json(list);
+        } else {
+            return res.serverError("Something went wrong"); 
+        }
+    },
+
+
+    packsImg: async function(req, res, next) { //devuelve ls apquetes publicados (estado 1)
+        var list = await Paquete.find().where({'id_estado': 1}).sort('nombre_paquete ASC')
+            //.populate('id_destino')
+            .populate('id_hotel')
+            .populate('id_tipoBus')
+            .populate('itinerario')
+            .populate('excursiones')
+            .populate('reservaciones')
+            .populate('imagenes');
+        if(list !== null && list !== undefined) {
+            lista_paquetes = [];
+            for(var x = 0; x < list.length; x++) { 
+                var tempImg = await Imagen.find({id_paquete: list[x].id, nivel: 0});
+                if(tempImg[0]){
+                    var nombre_imagen = tempImg[0].nombre;
+                    if(nombre_imagen !== ""){
+                        var code = base64Img.base64Sync('pictures/'+nombre_imagen);
+                    }
+                }
+                else {
+                    code = '';
+                }
+                var pack = {
+                    paquete: list[x],
+                    imagen: code,                    
+                }
+                lista_paquetes.push(pack);
+            }           
+           
+            return res.json(lista_paquetes); //
+        } else {
+            return res.serverError("Something went wrong"); 
+        }
+    },
+
+    packsImgID: async function(req, res, next) { //devuelve ls 
+        var list = await Paquete.find().where({'id': req.param('id') })
+            //.populate('id_destino')
+            .populate('id_hotel')
+            .populate('id_tipoBus')
+            .populate('itinerario')
+            .populate('excursiones')
+            .populate('reservaciones')
+            .populate('imagenes');
+        if(list !== null && list !== undefined) {
+            lista_paquetes = [];
+            for(var x = 0; x < list.length; x++) { 
+                var tempImg = await Imagen.find({id_paquete: list[x].id, nivel: 0});
+                if(tempImg[0]){
+                    var nombre_imagen = tempImg[0].nombre;
+                    if(nombre_imagen !== ""){
+                        var code = base64Img.base64Sync('pictures/'+nombre_imagen);
+                    }
+                }
+                else {
+                    code = '';
+                }
+                var pack = {
+                    paquete: list[x],
+                    imagen: code,                    
+                }
+                lista_paquetes.push(pack);
+            }           
+            return res.json(lista_paquetes); //
+        } else {
+            return res.serverError("Something went wrong"); 
+        }
+    },
+
+    packsImgConfirm: async function(req, res, next) { //devuelve ls apquetes publicados (estado 1)
+        var list = await Paquete.find().where({'id_estado': 1}).sort('nombre_paquete ASC')
+            //.populate('id_destino')
+            .populate('id_hotel')
+            .populate('id_tipoBus')
+            .populate('itinerario')
+            .populate('excursiones')
+            .populate('imagenes');
+        if(list !== null && list !== undefined) {
+            lista_paquetes = [];
+            for(var x = 0; x < list.length; x++) { 
+                var tempImg = await Imagen.find({id_paquete: list[x].id, nivel: 0});
+                if(tempImg[0]){
+                    var nombre_imagen = tempImg[0].nombre;
+                    if(nombre_imagen !== ""){
+                        var code = base64Img.base64Sync('pictures/'+nombre_imagen);
+                    }
+                }
+                else {
+                    code = '';
+                }
+                var pack = {
+                    paquete: list[x],
+                    imagen: code,                    
+                }
+                lista_paquetes.push(pack);
+            }              
+            return res.json(lista_paquetes); //
         } else {
             return res.serverError("Something went wrong"); 
         }
@@ -313,57 +347,441 @@ module.exports = {
         }
     },
 
-    indexByDestino: async function(req, res, next) { //devuelve todos los paquetes de un destino
-        var list = await Paquete.find().where({'id_destino': req.param('id_destino')})
-            .sort('nombre_paquete ASC')
-            .populate('id_destino')
-            .populate('id_hotel')
-            .populate('id_tipoBus')
-            .populate('itinerario')
-            .populate('excursiones')
-            .populate('imagenes');
-        if(list !== null && list !== undefined) {
-            return res.json(list);
-        } else {
-            return res.serverError("Something went wrong"); 
-        }
-    },
-    indexByName: async function(req, res, next) { //devuelve los paquetes por nombre o mes
+    indexByNombre: async function(req, res, next) { //devuelve todos los paquetes de un destino
         var value = req.body.search;
-        //si es el nombre de un mes devolvemos el valor transformado
-        if(value === 'enero') value = '/01/';
-        if(value === 'febrero') value = '/02/';
-        if(value === 'marzo') value = '/03/';
-        if(value === 'abril') value = '/04/';
-        if(value === 'mayo') value = '/05/';
-        if(value === 'junio') value = '/06/';
-        if(value === 'julio') value = '/07/';
-        if(value === 'agosto') value = '/08/';
-        if(value === 'septiembre') value = '/09/';
-        if(value === 'octubre') value = '/10/';
-        if(value === 'noviembre') value = '/11/';
-        if(value === 'diciembre') value = '/12/';
-
+        var estado = req.body.estado;
         var list = await Paquete.find().where({
-                or: [
-                    {'nombre_paquete': {contains: value}},
-                    {'fecha': {contains: value}},
-                ]
-            }).sort('nombre_paquete ASC')
-            .populate('id_destino')
-            .populate('id_hotel')
-            .populate('id_tipoBus')
-            .populate('itinerario')
-            .populate('excursiones')
-            .populate('imagenes');
+            or: [
+                {'nombre_paquete': {contains: value}},
+                {'destino': {contains: value}},
+            ],
+            'id_estado': estado
+        });
         if(list !== null && list !== undefined) {
-            return res.json(list);
+            lista_paquetes = [];
+            for(var x = 0; x < list.length; x++) { 
+                var tempImg = await Imagen.find({id_paquete: list[x].id, nivel: 0});
+                var code = '';
+                if(tempImg[0]){
+                    var nombre_imagen = tempImg[0].nombre;
+                    
+                    if(nombre_imagen !== ""){
+                        try{
+                           code = base64Img.base64Sync('pictures/'+nombre_imagen);
+                        }catch(err){
+                            code = '';
+                        }
+                        
+                    }
+                }
+                else {
+                    code = '';
+                }
+                moment.locale('es');
+                var fecha = moment(list[x].fecha).format('MMMM [/] YYYY');
+                var pack = {
+                    paquete: list[x],
+                    imagen: code,
+                    fechaFormat: fecha
+                }
+                lista_paquetes.push(pack);
+            }
+            return res.json({count: lista_paquetes.length, list: lista_paquetes});
+        } else {
+            return res.serverError("Something went wrong"); 
+        }
+    },
+    indexByMes: async function(req, res, next) { //devuelve los paquetes por mes segun estado
+        var value = req.body.search;        
+        //si es el nombre de un mes devolvemos el valor transformado
+        if(value === 'enero') value = 1;
+        if(value === 'febrero') value = 2;
+        if(value === 'marzo') value = 3;
+        if(value === 'abril') value = 4;
+        if(value === 'mayo') value = 5;
+        if(value === 'junio') value = 6;
+        if(value === 'julio') value = 7;
+        if(value === 'agosto') value = 8;
+        if(value === 'septiembre') value = 9;
+        if(value === 'octubre') value = 10;
+        if(value === 'noviembre') value = 11;
+        if(value === 'diciembre') value = 12;
+        var SELECT_BY_DATE_RANGE = `SELECT * FROM paquete WHERE MONTH(fecha) = $1 `;
+        
+        await sails.sendNativeQuery(SELECT_BY_DATE_RANGE, [ value ]).exec(async function(err, list) {
+            if (err) return res.serverError("Something went wrong");            
+            lista_paquetes = [];
+            for(var x = 0; x < list.rows.length; x++) {
+                var tempImg = await Imagen.find({id_paquete: list.rows[x].id, nivel: 0});
+                if(tempImg[0]){
+                    var nombre_imagen = tempImg[0].nombre;
+                    if(nombre_imagen !== ""){
+                        var code = base64Img.base64Sync('pictures/'+nombre_imagen);
+                    }
+                }
+                else {
+                    code = '';
+                   }
+                var pack = {
+                    paquete: list.rows[x],
+                    imagen: code
+                }
+                lista_paquetes.push(pack);             
+            }
+            return res.json({count: lista_paquetes.length, list: lista_paquetes});
+        });
+
+    },
+
+    searchPaquete: async function(req, res, next) { //devuelve todos los paquetes de un destino
+        var nombre = req.body.destino;
+        var fecha = req.body.fecha;
+        var ordenar = req.body.ordenarPor;
+        var p1 = req.body.destino == '' ? "!= $1" : "like '%"+nombre+"%'";
+        if(ordenar === null || ordenar === undefined || ordenar === ''){
+            ordenar='destino';
+        }
+        //si es el nombre de un mes devolvemos el valor transformado
+        if(fecha === 'enero') fecha = 1;
+        else if(fecha === 'febrero') fecha = 2;
+        else  if(fecha === 'marzo') fecha = 3;
+        else  if(fecha === 'abril') fecha = 4;
+        else  if(fecha === 'mayo') fecha = 5;
+        else  if(fecha === 'junio') fecha = 6;
+        else  if(fecha === 'julio') fecha = 7;
+        else  if(fecha === 'agosto') fecha = 8;
+        else  if(fecha === 'septiembre') fecha = 9;
+        else  if(fecha === 'octubre') fecha = 10;
+        else  if(fecha === 'noviembre') fecha = 11;
+        else  if(fecha === 'diciembre') fecha = 12;
+        else fecha = 0;
+        var p2 = fecha == 0 ? "!= 0" : "="+fecha + "";
+        if(ordenar === 'destino'){
+            var SELECT_ORDER = `SELECT
+            paquete.id,
+            paquete.nombre_paquete,
+            paquete.descripcion,
+            paquete.destino,
+            paquete.fecha,
+            paquete.lugar_salida,
+            paquete.cantidad_noches
+            FROM
+            paquete
+            WHERE
+            (paquete.nombre_paquete ` + p1 + ` OR
+            paquete.destino ` + p1 + `) AND
+            MONTH(fecha) ` + p2 + ` AND
+            paquete.id_estado = 1
+            ORDER BY
+            paquete.destino ASC
+            `;
+        } else {
+            var SELECT_ORDER = `SELECT
+            paquete.id,
+            paquete.nombre_paquete,
+            paquete.descripcion,
+            paquete.destino,
+            paquete.fecha,
+            paquete.lugar_salida,
+            paquete.cantidad_noches
+            FROM
+            paquete
+            WHERE
+            (paquete.nombre_paquete ` + p1 + ` OR
+            paquete.destino ` + p1 + `) AND
+            MONTH(fecha) ` + p2 + ` AND
+            paquete.id_estado = 1
+            ORDER BY
+            paquete.fecha ASC
+            `;
+        }
+        await sails.sendNativeQuery(SELECT_ORDER, [ nombre ]).exec(async function(err, list) {
+            if (err) return res.serverError("Something went wrong");            
+            lista_paquetes = [];
+            for(var x = 0; x < list.rows.length; x++) {
+                var tempImg = await Imagen.find({id_paquete: list.rows[x].id, nivel: 0});
+                var code = '';
+                if(tempImg[0]){
+                    var nombre_imagen = tempImg[0].nombre;
+                    if(nombre_imagen !== ""){
+                        try{
+                            code = base64Img.base64Sync('pictures/'+nombre_imagen);
+                        }catch(err){
+                            code = '';
+                        }
+                       
+                    }
+                }
+                else {
+                    code = '';
+                }
+                moment.locale('es');
+                var fecha = moment(list.rows[x].fecha).format('dd [/] MMMM [/] YYYY');
+                var pack = {
+                    paquete: list.rows[x],
+                    imagen: code,
+                    fechaFormat: fecha
+                }
+                lista_paquetes.push(pack);             
+            }
+            return res.json({count: lista_paquetes.length, list: lista_paquetes});
+        });
+    },
+
+    getHabitaciones: async function(req, res, next) { //devuelve precios de habitaciones de un paquete
+        var id_hotel = await Paquete.findOne({ where: {'id': req.param('id_paquete')},
+            select: ['id_hotel'] });
+        if(id_hotel !== null && id_hotel !== undefined) {
+            var list = await Habitacion.find().where({'id_hotel': id_hotel});
+            if(list !== null && list !== undefined) {
+                return res.json(list);
+            } else {
+                return res.serverError("Something went wrong"); 
+            }
+        } else {
+            return res.serverError("Something went wrong"); 
+        }       
+        
+    },
+
+    getPacksReservadosByAgencia: async function(req, res, next) { //devuelve los paquetes reservados
+        var user = parseInt(req.body.user);
+        var estado = parseInt(req.body.estado);
+        var agency = await Agencia.findOne().where({'id_user': user});
+        
+        var SELECT_RESERVAS = `SELECT
+        paquete.id,
+        paquete.nombre_paquete
+        FROM
+        reservacion
+        INNER JOIN paquete ON reservacion.id_paquete = paquete.id
+        INNER JOIN pasajero ON pasajero.id_reservacion = reservacion.id
+        INNER JOIN agencia ON reservacion.id_agencia = agencia.id
+        WHERE
+        paquete.id_estado = 1 AND
+        agencia.id = $1 AND
+        pasajero.estado = $2
+        GROUP BY
+        paquete.nombre_paquete`;
+        
+        await sails.sendNativeQuery(SELECT_RESERVAS, [ agency.id , estado]).exec(async function(err, list) {
+            if (err) return res.serverError("Something went wrong");            
+            lista_paquetes = [];
+            for(var x = 0; x < list.rows.length; x++) {
+                var tempImg = await Imagen.find({id_paquete: list.rows[x].id, nivel: 0});
+                if(tempImg[0]){
+                    var nombre_imagen = tempImg[0].nombre;
+                    if(nombre_imagen !== ""){
+                        var code = base64Img.base64Sync('pictures/'+nombre_imagen);
+                    }
+                }
+                else {
+                    code = '';
+                   }
+                var pack = {
+                    paquete: list.rows[x],
+                    imagen: code
+                }
+                lista_paquetes.push(pack);             
+            }
+            return res.json({count: lista_paquetes.length, list: lista_paquetes});
+        });
+    }, 
+
+    gettodosPacksReservados: async function(req, res, next) { //devuelve los paquetes reservados
+        //var user = parseInt(req.body.user);
+        var estado = parseInt(req.body.estado);
+        //var agency = await Agencia.findOne().where({'id_user': user});
+        
+        var SELECT_RESERVAS = `SELECT
+        paquete.id,
+        paquete.nombre_paquete,
+        paquete.asientos,
+        paquete.id_tipoBus
+        FROM
+        reservacion
+        INNER JOIN paquete ON reservacion.id_paquete = paquete.id
+        INNER JOIN pasajero ON pasajero.id_reservacion = reservacion.id
+        INNER JOIN agencia ON reservacion.id_agencia = agencia.id
+        WHERE
+        paquete.id_estado = 1 AND
+        pasajero.estado = $1
+        GROUP BY
+        paquete.nombre_paquete`;
+        
+        await sails.sendNativeQuery(SELECT_RESERVAS, [estado]).exec(async function(err, list) {
+            if (err) return res.serverError("Something went wrong");            
+            lista_paquetes = [];
+            for(var x = 0; x < list.rows.length; x++) {
+                var tempImg = await Imagen.find({id_paquete: list.rows[x].id, nivel: 0});
+                if(tempImg[0]){
+                    var nombre_imagen = tempImg[0].nombre;
+                    if(nombre_imagen !== ""){
+                        try {
+                            var code = base64Img.base64Sync('pictures/'+nombre_imagen);
+                        }
+                        catch(err) {
+                            code = '';
+                        }
+                       
+                    }
+                }
+                else {
+                    code = '';
+                   }
+                var pack = {
+                    paquete: list.rows[x],
+                    imagen: code
+                }
+                lista_paquetes.push(pack);             
+            }
+            return res.json({count: lista_paquetes.length, list: lista_paquetes});
+        });
+    }, 
+
+    getPacksTop: async function(req, res, next) { //devuelve los paquetes reservados
+        
+        var SELECT_PACKS = `SELECT
+        Count(reservacion.estado) AS CANTIDAD,
+        paquete.id,
+        paquete.nombre_paquete,
+        paquete.descripcion,
+        paquete.destino,
+        paquete.fecha,
+        paquete.lugar_salida,
+        paquete.cantidad_noches
+        FROM
+        reservacion
+        INNER JOIN paquete ON paquete.id = reservacion.id_paquete
+        WHERE reservacion.estado = 2
+        GROUP BY
+        paquete.id
+        ORDER BY
+        CANTIDAD DESC
+        LIMIT 6`;
+        
+        await sails.sendNativeQuery(SELECT_PACKS, []).exec(async function(err, list) {
+            if (err) return res.serverError("Something went wrong");            
+            lista_paquetes = [];
+            for(var x = 0; x < list.rows.length; x++) {
+                var tempImg = await Imagen.find({id_paquete: list.rows[x].id, nivel: 0});
+                if(tempImg[0]){
+                    var nombre_imagen = tempImg[0].nombre;
+                    if(nombre_imagen !== ""){
+                        try{
+                            var code = base64Img.base64Sync('pictures/'+nombre_imagen);
+                        }catch(err){
+                            code = '';
+                        }
+                        
+                    }
+                }
+                else {
+                    code = '';
+                }
+                moment.locale('es');
+                var fecha = moment(list.rows[x].fecha).format('dd [/] MMMM [/] YYYY');
+                var pack = {
+                    paquete: list.rows[x],
+                    imagen: code,
+                    fechaFormat: list.rows[x].fecha
+                }
+                lista_paquetes.push(pack);             
+            }
+            return res.json({count: lista_paquetes.length, list: lista_paquetes});
+        });
+
+    }, 
+
+
+
+    getPacksfiltrados: async function(req, res, next) { //devuelve los paquetes reservados
+        var user = parseInt(req.body.user);
+        var criterio = req.body.criterio;
+        var estado = parseInt(req.body.estado);
+        var agency = await Agencia.findOne().where({'id_user': user});
+        var p1 = req.body.criterio == '' ? "!= $1" : "like '%"+criterio+"%'";
+        var SELECT_ORDER = `SELECT
+        paquete.id,
+        paquete.nombre_paquete
+        FROM
+        reservacion
+        INNER JOIN paquete ON reservacion.id_paquete = paquete.id
+        INNER JOIN pasajero ON pasajero.id_reservacion = reservacion.id
+        INNER JOIN agencia ON reservacion.id_agencia = agencia.id
+        WHERE
+        paquete.id_estado = 1 AND
+        agencia.id = $1 AND
+        pasajero.estado = $3 AND
+        (paquete.destino = $2 OR
+            pasajero.nombre_pasajero = $2 OR
+            pasajero.numero_documento = $2 )
+        GROUP BY
+        paquete.nombre_paquete`;
+        var parametro = criterio.toString(); sails.log(parametro);
+
+            await sails.sendNativeQuery(SELECT_ORDER, [agency.id, parametro, estado]).exec(async function(err, list) {
+                if (err) return res.serverError("Something went wrong");            
+                lista_paquetes = [];
+                for(var x = 0; x < list.rows.length; x++) {
+                    var tempImg = await Imagen.find({id_paquete: list.rows[x].id, nivel: 0});
+                    if(tempImg[0]){
+                        var nombre_imagen = tempImg[0].nombre;
+                        if(nombre_imagen !== ""){
+                            var code = base64Img.base64Sync('pictures/'+nombre_imagen);
+                        }
+                    }
+                    else {
+                        code = '';
+                       }
+                    var pack = {
+                        paquete: list.rows[x],
+                        imagen: code
+                    }
+                    lista_paquetes.push(pack);             
+                }
+                return res.json({count: lista_paquetes.length, list: lista_paquetes});
+            });
+
+    }, 
+
+    getHabitacionesPaquetePasajero: async function(req, res, next) { //devuelve habitaciones de un paquete dado un pasajero
+        var pasajero = await Pasajero.findOne({ where: {'id': req.param('id_pasajero')},
+        select: ['id_reservacion'] });
+        var reservacion = await Reservacion.findOne({ where: {'id': pasajero.id_reservacion},
+            select: ['id_paquete'] });
+        var paquete = await Paquete.findOne({ where: {'id': reservacion.id_paquete},
+        select: ['id_hotel'] });
+        if(paquete !== null && paquete !== undefined) {
+            var list = await Habitacion.find().where({'id_hotel': paquete.id_hotel}).populate('id_tipo_habitacion');
+            if(list !== null && list !== undefined) {
+                return res.json(list);
+            } else {
+                return res.serverError("Something went wrong"); 
+            }
+        } else {
+            return res.serverError("Something went wrong"); 
+        }       
+        
+    },
+
+    hasItinerario: async function(req, res, next) { 
+        var total = await Actividad.count({id_paquete: req.param('id')});;
+        if(total !== null && total !== undefined) {
+            return res.json(total);
+        } else {
+            return res.serverError("Something went wrong"); 
+        }
+    },
+    hasExcursiones: async function(req, res, next) { 
+        var total = await Excursion.count({id_paquete: req.param('id')});
+        if(total !== null && total !== undefined) {
+            return res.json(total);
         } else {
             return res.serverError("Something went wrong"); 
         }
     },
 
-  
 
 };
 

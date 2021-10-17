@@ -1,11 +1,11 @@
 module.exports.email = {
-    service: "Gmail",
+    service: "Hotmail",
     auth: {
-        user: "developer.proy8020@gmail.com", 
-        pass: "proy8020**"
+        user: "bhi2021manager@hotmail.com", 
+        pass: "BHI2021*"
     },
     templateDir: "api/email",
-    from: "developer.proy8020@gmail.com",
+    from: "bhi2021manager@hotmail.com",
     testMode: false,
     ssl: true
 }

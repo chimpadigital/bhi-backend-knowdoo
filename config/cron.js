@@ -9,7 +9,7 @@ module.exports.cron = {
         //obtener reserva con más de 48 horas sin confirmar
         var data = moment().subtract(48, 'hours').format('YYYY-MM-DD HH:mm:ss');
         
-        var reservaciones = await  Reservacion.find().where({'fecha_registro':{"<":data}, 'estado':1});
+        var reservaciones = await  Reservacion.find().where({'fecha_registro':{"<":data}, 'estado':{ '!=' : 2}});
         
         //eliminar reservas obtenidas
         for(var x = 0; x < reservaciones.length; x++) {
@@ -22,22 +22,37 @@ module.exports.cron = {
             }
             //eliminar archivos de pasajeros     
             var archivos = await  Pasajero.find({ where: {id_reservacion: reserva.id},
-                                                select: ['comprobante', 'ficha_medica','imagen_documento'] });                  
+                                                select: ['comprobante'] });                  
             for(var y = 0; y < archivos.length; y++) {
                 var archivo = archivos[y];
-                if(archivo.imagen_documento !== null && archivo.imagen_documento !== undefined && archivo.imagen_documento !== "") {
-                    await fs.unlink("documents/"+archivo.imagen_documento); 
-                }   
-                if(archivo.ficha_medica !== null && archivo.ficha_medica !== undefined && archivo.ficha_medica !== "") {
-                    await fs.unlink("documents/"+archivo.ficha_medica); 
-                }
                 if(archivo.comprobante !== null && archivo.comprobante !== undefined && archivo.comprobante !== "") {
                     await fs.unlink('comprobantes/'+archivo.comprobante); 
-                }                      
+                }  
+                //eliminar documentos de Pasajero
+                var docs = await  Documentos.find({ where: {pasajero:archivo.id},
+                    select: ['nombre'] });
+                for(let i=0; i<docs.length; i++) {
+                    //eliminar fichero
+                    if(docs[i].nombre !== null && docs[i].nombre !== undefined && docs[i].nombre !== "") {
+                        await fs.unlink("documents/"+docs[i].nombre); 
+                    } 
+                    //actualizar BD
+                    await Documentos.destroyOne({ id: docs[i].id });
+                }   
+                //eliminar ficha médica de pasajero
+                var fichas = await  FichaMedica.find({ where: {pasajero:archivo.id},
+                                                        select: ['nombre'] });
+                for(let i=0; i<fichas.length; i++) {
+                    //eliminar fichero
+                    if(fichas[i].nombre !== null && fichas[i].nombre !== undefined && fichas[i].nombre !== "") {
+                        await fs.unlink("documents/"+fichas[i].nombre); 
+                    } 
+                    //actualizar BD
+                    await FichaMedica.destroyOne({ id: fichas[i].id });
+                }                          
             }
-            await Pasajero.destroy({id_reservacion:reserva.id}); 
             //Eliminar los registros de la BD
-            await AsientoReservado.destroy({id_reserva: reserva.id});
+            await Pasajero.destroy({id_reservacion:reserva.id}); 
             await Reservacion.destroyOne({id:reserva.id});  
         }   
       }

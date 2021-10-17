@@ -1,0 +1,22 @@
+stages:
+ - pull
+ - compilar
+ - deploy
+  
+pull:
+ stage: pull
+ script:
+    - cd /var/www/html/sails/bhi-back
+    - git stash
+    - git pull
+
+compilar:
+  stage: compilar  
+  script: 
+    - cd /var/www/html/sails/bhi-back
+    - npm install
+
+deploy:
+  stage: deploy  
+  script: 
+    - sudo systemctl restart bhi-back  

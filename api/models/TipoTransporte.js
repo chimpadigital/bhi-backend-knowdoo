@@ -5,8 +5,6 @@ module.exports = {
             required: true, 
             unique: true
         },
-        capacidad: {
-            type: 'number'
-        }
+        
     }
 };

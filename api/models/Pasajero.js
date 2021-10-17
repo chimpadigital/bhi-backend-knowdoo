@@ -17,10 +17,8 @@ module.exports = {
     telefono_pasajero:{ type: 'string', required: false },
     email_pasajero:{ type: 'string', required: false },
     tipo_documento:{ type: 'string', required: false },
-    numero_documento:{ type: 'number', required: false },
-    observaciones_pasajero:{ type: 'string', required: false },
-    imagen_documento:{ type: 'string', required: false },
-    ficha_medica:{ type: 'string', required: false },
+    numero_documento:{ type: 'string', required: false },
+    observaciones_pasajero:{ type: 'string', required: false }, 
     nombre_emergencia:{ type: 'string', required: false },
     telefono_emergencia:{ type: 'number', required: false },
     comprobante:{ type: 'string', required: false },
@@ -28,6 +26,8 @@ module.exports = {
     twitter_pasajero:{ type: 'string', required: false },
     instagram_pasajero:{ type: 'string', required: false },
     estado: { type: 'number', defaultsTo: 1 },
+    bebe: { type: 'boolean', defaultsTo: false },
+    asiento: {type:'string'},
 
 
     //  ╔═╗╔╦╗╔╗ ╔═╗╔╦╗╔═╗

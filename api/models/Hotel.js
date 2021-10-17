@@ -13,10 +13,11 @@ module.exports = {
     //  ╠═╝╠╦╝║║║║║ ║ ║╚╗╔╝║╣ ╚═╗
     //  ╩  ╩╚═╩╩ ╩╩ ╩ ╩ ╚╝ ╚═╝╚═╝
 
-    nombre_hotel:{ type: 'string', required: true, unique: true },
-    categoria_hotel:{ type: 'number', required: true },
+    nombre_hotel:{ type: 'string', required: false},
+    categoria_hotel:{ type: 'number', required: false },
     imagen_hotel:{ type: 'string', required: false },
-    ext:{ type: 'string', required: false },
+    cama_simple:{ type: 'number', required: false },
+    cama_doble:{ type: 'number', required: false },
 
 
     //  ╔═╗╔╦╗╔╗ ╔═╗╔╦╗╔═╗

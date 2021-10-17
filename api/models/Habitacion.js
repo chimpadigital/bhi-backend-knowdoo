@@ -13,17 +13,11 @@ module.exports = {
     //  ╠═╝╠╦╝║║║║║ ║ ║╚╗╔╝║╣ ╚═╗
     //  ╩  ╩╚═╩╩ ╩╩ ╩ ╩ ╚╝ ╚═╝╚═╝
 
-    precio_adulto_noche:{ type: 'number', required: true },
-    precio_menor_noche:{ type: 'number', required: false },
-    precio_bebe_noche:{ type: 'number', required: false },
+    precio:{ type: 'string', required: false },
     id_tipo_habitacion: {
       model: "tipoHabitacion",
       required: true,
-    },
-    id_tipo_cama: {
-      model: "tipoCama",
-      required: true,
-    },
+    },    
 
 
     //  ╔═╗╔╦╗╔╗ ╔═╗╔╦╗╔═╗

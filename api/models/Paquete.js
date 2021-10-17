@@ -13,14 +13,18 @@ module.exports = {
     //  ╠═╝╠╦╝║║║║║ ║ ║╚╗╔╝║╣ ╚═╗
     //  ╩  ╩╚═╩╩ ╩╩ ╩ ╩ ╚╝ ╚═╝╚═╝
 
-    nombre_paquete:{ type: 'string', required: true },
-    cantidad_noches:{type: 'number',required: true },
-    lugar_salida:{type: 'string', required: true },
-    fecha:{type: 'string', required: true },
-    observaciones_paquete:{type: 'string', required: false },
-    edad_desde:{type: 'number', required: true },
-    edad_hasta: {type: 'number', required: true }, 
-    properties_paquete:{type: 'string', required: true },
+    nombre_paquete:{ type: 'string', required: false },
+    descripcion:{type: 'string', required: false },
+    destino:{ type: 'string', required: false },
+    fecha:{ type: 'ref', columnType: 'DateTime', required: false },
+    cantidad_noches:{type: 'string',required: false },
+    lugar_salida:{type: 'string', required: false },
+    properties_paquete:{type: 'string', required: false },
+    edad_desde:{type: 'string', required: false },
+    edad_hasta: {type: 'string', required: false }, 
+    asientos: {type: 'string', required: false },
+    observaciones_paquete:{type: 'string', columnType: 'text', required: false },
+    titulo_observaciones:{type: 'string',  required: false },
 
 
     //  ╔═╗╔╦╗╔╗ ╔═╗╔╦╗╔═╗
@@ -37,7 +41,7 @@ module.exports = {
     //  ╩ ╩╚═╝╚═╝╚═╝╚═╝╩╩ ╩ ╩ ╩╚═╝╝╚╝╚═╝
 
     id_hotel: { model: 'hotel'},
-    id_destino: { model: 'destino'},
+    //id_destino: { model: 'destino'},
     id_tipoBus: { model: 'tipoTransporte'},
     id_estado: { model: 'estado'},
 

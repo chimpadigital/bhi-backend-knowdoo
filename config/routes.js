@@ -21,7 +21,7 @@ module.exports.routes = {
   *                                                                          *
   ***************************************************************************/
 
-  '/': { view: 'pages/homepage' },
+  '/': { view: 'pages/homepage' },  
 
 
   /***************************************************************************
@@ -42,7 +42,7 @@ module.exports.routes = {
 
   'GET /api/user/reset': 'UserController.reset',  //VERIFICA SI EL TOKEN DE RECUPERACION ES VALIDO
   'POST /api/user/reset': 'UserController.resetPassword',  //CAMBIA CONTRASEÑA A PARTIR DE TOKEN VALIDO
-
+  'GET /api/user/totalNewUsers': 'UserController.getTotalNewUsers',
   /**APIS de AGENCIA */
   'POST /api/agency/create': 'AgenciaController.createAgencyByUser',
   'POST /api/agency/createAgency': 'AgenciaController.createAgency', 
@@ -50,6 +50,7 @@ module.exports.routes = {
 
   'POST /api/agency/activate': 'AgenciaController.aprobarAgency',
   'POST /api/agency/refuse': 'AgenciaController.rechazarAgency',
+  'POST /api/agency/activateAll': 'AgenciaController.aprobarAgencias',
 
   'POST /api/agency/update': 'AgenciaController.updateMyAgency',
   'POST /api/agency/updateAgency': 'AgenciaController.updateAgency',
@@ -61,6 +62,7 @@ module.exports.routes = {
 
   'GET /api/agency/get': 'AgenciaController.getAgency',
   'GET /api/agency/show': 'AgenciaController.show',
+  'POST /api/agency/filter': 'AgenciaController.filterAgencia',
   'POST /api/agency/get': 'AgenciaController.indexByName',
 
   'GET /api/agency/getAgenciasByReservaciones': 'AgenciaController.getAgenciasReservaciones',
@@ -105,6 +107,11 @@ module.exports.routes = {
   'POST /api/itinerario/deleteActividades': 'ActividadController.deleteActividades',
   'GET /api/itinerario/list': 'ActividadController.index',
   'GET /api/itinerario/delete': 'ActividadController.deleteItinerario',
+  'POST /api/itinerario/createExcursiones': 'ExcursionOpcionalController.createExcursiones',
+  'GET /api/itinerario/listExcursiones': 'ExcursionOpcionalController.index',
+  'POST /api/itinerario/deleteExcursiones': 'ExcursionOpcionalController.deleteExcursiones',
+  'GET /api/itinerario/getItinerarioSlider': 'ActividadController.getItinerarioSlider', 
+  'GET /api/itinerario/getExcursionesSlider': 'ExcursionOpcionalController.getExcursionesSlider',
 
   /* APIs de EXCURSION*/
   'POST /api/excursion/create': 'ExcursionController.createExcursiones',
@@ -132,32 +139,67 @@ module.exports.routes = {
   'GET /api/paquete/delete': 'PaqueteController.delete',
   'GET /api/paquete/get': 'PaqueteController.show',
   'GET /api/paquete/list': 'PaqueteController.packs',
+  'GET /api/paquete/listImg': 'PaqueteController.packsImg',             //***tabajo con imagenes (reservados)
+  'GET /api/paquete/listImgCfm': 'PaqueteController.packsImgConfirm',   //***tabajo con imagenes (confirmados)
+  'GET /api/paquete/listImgId': 'PaqueteController.packsImgID',
   'GET /api/paquete/all': 'PaqueteController.index',
   'GET /api/paquete/canceled': 'PaqueteController.canceled',
-  'POST /api/paquete/search': 'PaqueteController.indexByName',
-  'GET /api/paquete/listByDestino': 'PaqueteController.indexByDestino',
+  'POST /api/paquete/search': 'PaqueteController.indexByNombre',
+  'POST /api/paquete/listByMes': 'PaqueteController.indexByMes', 
+  'POST /api/paquete/searchPaquetes': 'PaqueteController.searchPaquete', 
+  'POST /api/paquete/paquetesResAgencia': 'PaqueteController.getPacksReservadosByAgencia', 
+  'POST /api/paquete/paquetesRes': 'PaqueteController.gettodosPacksReservados',
+  'GET /api/paquete/paquetesTop': 'PaqueteController.getPacksTop',
+  'POST /api/paquete/paquetesSearch': 'PaqueteController.getPacksfiltrados', 
+  'POST /api/paquete/updateObservaciones': 'PaqueteController.updateObservaciones',
+  'GET /api/paquete/getHabitacionesPaquetePasajero': 'PaqueteController.getHabitacionesPaquetePasajero',
+  'GET /api/paquete/hasItinerario': 'PaqueteController.hasItinerario',
+  'GET /api/paquete/hasExcursiones': 'PaqueteController.hasExcursiones',
+
+  /** APIs de tipo transporte */
+  'POST /api/tipoTransporte/get': 'TipoTransporteController.get',
+  'POST /api/tipoTransporte/getById': 'TipoTransporteController.getById',
+  'GET /api/tipoTransporte/index': 'TipoTransporteController.index',
+
+  /** APIs de tipo habitacion */
+  'GET /api/tipoHabitacion/index': 'TipoHabitacionController.index',
+  'GET /api/tipoCama/index': 'TipoCamaController.index',
+  'POST /api/tipoHabitacion/getById': 'TipoHabitacionController.getById',
+  
 
   /** APIs de RESERVACION */
   'POST /api/reservacion/create': 'ReservacionController.create',
   'POST /api/reservacion/update': 'ReservacionController.update',
   'POST /api/reservacion/getByCode': 'ReservacionController.indexByCode',
   'GET /api/reservacion/getCode': 'ReservacionController.getCodeReservacion',
-  'GET /api/reservacion/check': 'ReservacionController.comprobante',
+  'GET /api/reservacion/ficha': 'ReservacionController.comprobante',
   'GET /api/reservacion/change': 'ReservacionController.changeEstado',
   'GET /api/reservacion/delete': 'ReservacionController.delete',
   'GET /api/reservacion/get': 'ReservacionController.show',
   'GET /api/reservacion/list': 'ReservacionController.getReservaciones',
+  'GET /api/reservacion/listPasajeros': 'ReservacionController.getPasajerosSC',
+  'GET /api/reservacion/porConfirmar': 'ReservacionController.getXPasajeroNoConfirmado',
+  'GET /api/reservacion/agenciasReservacion': 'ReservacionController.getAgenciasXpack',
+  'GET /api/reservacion/agenciasConfReservacion': 'ReservacionController.getAgenciasConfXpack',
+  'GET /api/reservacion/totalVentas': 'ReservacionController.getTotalVentasMes', 
+  'GET /api/reservacion/getAsientosPaquete': 'ReservacionController.getAsientosPaquete', 
+  'GET /api/reservacion/mostrarResumenReservacion': 'ReservacionController.mostrarResumenReservacion',
+  'GET /api/reservacion/getCantidadReservaciones': 'ReservacionController.getCantidadReservaciones',
+
+
 
   /** APIs de PASAJEROS */
-  'POST /api/pasajero/create': 'PasajeroController.create',
+  //'POST /api/pasajero/create': 'PasajeroController.create',
+  'POST /api/pasajero/createPasajeros': 'PasajeroController.createPasajeros',
   'POST /api/pasajero/update': 'PasajeroController.update',
   'POST /api/pasajero/changeEstados': 'PasajeroController.changeEstadoPasajeros',
   'POST /api/pasajero/deletePasajeros': 'PasajeroController.deletePasajeros',
-  'POST /api/pasajero/updateDocumento': 'PasajeroController.updateDoc',
-  'POST /api/pasajero/updateFichaMedica': 'PasajeroController.updateFicha',
+  //'POST /api/pasajero/updateDocumento': 'PasajeroController.updateDoc',
+  //'POST /api/pasajero/updateFichaMedica': 'PasajeroController.updateFicha',
   'GET /api/pasajero/changeEstadosReserva': 'PasajeroController.changeEstadoReserva',
   'GET /api/pasajero/change': 'PasajeroController.changeEstado',
   'GET /api/pasajero/delete': 'PasajeroController.delete',
+  'GET /api/pasajero/deleteone': 'PasajeroController.deleteOne',
   'GET /api/pasajero/deleteReserva': 'PasajeroController.deletePasajerosReserva',
   'GET /api/pasajero/get': 'PasajeroController.show',
   'GET /api/pasajero/list': 'PasajeroController.getPasajeros',
@@ -166,4 +208,17 @@ module.exports.routes = {
   'GET /api/pasajero/deleteFichaMedica':'PasajeroController.deleteFicha',
   'GET /api/pasajero/downloadDocumento': 'PasajeroController.downloadDoc',
   'GET /api/pasajero/downloadFichaMedica': 'PasajeroController.downloadFicha',
+  /**Devolver pasajeros */
+  'POST /api/pasajero/getPasajerosAgencia':'PasajeroController.getPasajerosAgencia', 
+  'POST /api/pasajero/getPasajerosAgenciaSearch':'PasajeroController.getPasajerosAgenciaSearch', 
+  'GET /api/pasajero/getDocs': 'PasajeroController.getDocs',
+  'GET /api/pasajero/getFichas': 'PasajeroController.getFichas',
+
+  /** APIs de Transporte */
+  'POST /api/transporte/create': 'TransporteController.create',
+  //'POST /api/transporte/update': 'TransporteController.update',
+  'GET /api/transporte/delete': 'TransporteController.delete',
+  'GET /api/transporte/list': 'TransporteController.index',
+  //'GET /api/transporte/get': 'TransporteController.edit',
+
 };

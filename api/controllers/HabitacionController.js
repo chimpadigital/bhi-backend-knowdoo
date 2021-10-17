@@ -16,12 +16,6 @@ module.exports = {
             return res.badRequest("El tipo de habitación no está registrado en la BD");    
         }
 
-        //comprobar si el tipo de cama existe
-        var registro = await TipoCama.findOne({id: parseInt(data.tipo_cama)});
-        if(registro === null || registro === undefined) {
-            return res.badRequest("El tipo de cama no está registrado en la BD");    
-        }
-
         //comprobar si el hotel existe
         var registro = await Hotel.findOne({id: parseInt(data.hotel)});
         if(registro === null || registro === undefined) {
@@ -30,10 +24,7 @@ module.exports = {
         
         var createdRegister = await Habitacion.create({
             id_tipo_habitacion:data.tipo_habitacion,
-            id_tipo_cama:data.tipo_cama,
-            precio_adulto_noche: data.precio_adulto,
-            precio_menor_noche: data.precio_menor,
-            precio_bebe_noche: data.precio_bebe,
+            precio: data.precio,            
             id_hotel: data.hotel,              
         }).fetch(); 
     
@@ -56,10 +47,7 @@ module.exports = {
             for(var x = 0; x < data.length; x++) {
                 await Habitacion.create({
                     id_tipo_habitacion:data[x].tipo_habitacion,
-                    id_tipo_cama:data[x].tipo_cama,
-                    precio_adulto_noche: data[x].precio_adulto,
-                    precio_menor_noche: data[x].precio_menor,
-                    precio_bebe_noche: data[x].precio_bebe,
+                    precio: data[x].precio,                    
                     id_hotel: id_hotel ,              
                 });
             }
@@ -70,10 +58,7 @@ module.exports = {
     update: async function(req, res, next) {
         const data = req.body;
         var registro = await Habitacion.updateOne({ id: data.id }).set({
-            id_tipo_cama:data.tipo_cama,
-            precio_adulto_noche: data.precio_adulto,
-            precio_menor_noche: data.precio_menor,
-            precio_bebe_noche: data.precio_bebe,               
+            precio: data.precio,                         
         });
         if(registro !== null && registro !== undefined) {
             return res.send({ code: "OK", msg: "HABITACION_EDIT_SUCCESS", data: registro });     
@@ -86,10 +71,7 @@ module.exports = {
         const data = req.body;
         for(var x = 0; x < data.length; x++) {
             await Habitacion.updateOne({ id: data[x].id }).set({
-                id_tipo_cama:data[x].tipo_cama,
-                precio_adulto_noche: data[x].precio_adulto,
-                precio_menor_noche: data[x].precio_menor,
-                precio_bebe_noche: data[x].precio_bebe,                 
+                precio: data[x].precio,                                
             });
         };
         return res.send({ code: "OK", msg: "HABITACIONES_EDIT_SUCCESS" });    
@@ -97,10 +79,7 @@ module.exports = {
 
     index: async function(req, res, next) {
         var list = await Habitacion.find()
-            .where({id_hotel: req.param('id_hotel')})
-            .populate('id_tipo_habitacion')
-            .populate('id_tipo_cama')
-            .populate('id_hotel');
+            .where({id_hotel: req.param('id_hotel')});
         if(list !== null && list !== undefined) {
             return res.json(list);
         } else {
@@ -110,8 +89,7 @@ module.exports = {
 
     get:async function(req, res, next) {
         var habitacion = await Habitacion.findOne(req.param('id'))
-            .populate('id_tipo_habitacion')
-            .populate('id_tipo_cama')
+            .populate('id_tipo_habitacion')            
             .populate('id_hotel');
         if(habitacion !== null && habitacion !== undefined) {
             return res.json(habitacion);

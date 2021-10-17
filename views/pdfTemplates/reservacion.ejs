@@ -3,16 +3,12 @@
   <head>
     <title>COMPROBANTE DE RESERVACION</title>
   </head>
-  <body>
-    <div id="pageHeader" style="border-bottom: 1px solid #ddd; padding-bottom: 5px;">
-      <p style="color: #666; margin: 0; padding-top: 12px; padding-bottom: 5px; text-align: right; font-family: sans-serif; font-size: .85em">
-        COMPROBANTE DE RESERVACION
-      </p>
-    </div>
+  <body>    
     <div id="pageFooter" style="border-top: 1px solid #ddd; padding-top: 5px;">
       <p style="color: #666; margin: 0; padding-bottom: 5px; text-align: right; font-family: sans-serif; font-size: .65em">
       BHI Viajes</p>
     </div>
+    <div style= "width: 100%; height: auto;"><img src="images/headerPlantilla.png" width="100%"/></div>
     <div style= "width: 100%">
       <h3>Código de reserva <%= reservacion.codigoReserva %></h3>
       <div style= "width: 50%; float: left">
@@ -23,11 +19,7 @@
         <p style= "height: 60px"><b>Observaciones Generales:</b> <br><%= reservacion.observaciones %></p>
         <p><b>Tipo de Bus:</b> <%= reservacion.tipoBus %></p>
         <p><b>Asientos reservados:</b> 
-          <% if (reservacion.asientos.length > 0) { %>
-            <% reservacion.asientos.forEach(asiento => {%>
-              &nbsp-&nbsp <%= asiento %>
-            <%  });%>
-          <% }%>
+          <%= reservacion.asientos %>          
         </p>
       </div>
       <div style= "width: 50%; float: left">

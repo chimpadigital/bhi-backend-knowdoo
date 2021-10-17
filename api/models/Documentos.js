@@ -1,28 +1,33 @@
-module.exports = {
+/**
+ * Documentos.js
+ *
+ * @description :: A model definition represents a database table/collection.
+ * @docs        :: https://sailsjs.com/docs/concepts/models-and-orm/models
+ */
+
+ module.exports = {
 
     attributes: {
   
       //  ╔═╗╦═╗╦╔╦╗╦╔╦╗╦╦  ╦╔═╗╔═╗
       //  ╠═╝╠╦╝║║║║║ ║ ║╚╗╔╝║╣ ╚═╗
       //  ╩  ╩╚═╩╩ ╩╩ ╩ ╩ ╚╝ ╚═╝╚═╝
-  
-      nombre:{ type: 'string', required: true },
-      ext:{ type: 'string', required: false },
-      nivel:{ type: 'number', required: true },
+      nombre: {type: 'string', required: true },     
   
   
       //  ╔═╗╔╦╗╔╗ ╔═╗╔╦╗╔═╗
       //  ║╣ ║║║╠╩╗║╣  ║║╚═╗
       //  ╚═╝╩ ╩╚═╝╚═╝═╩╝╚═╝
   
-      id_paquete: { model: 'paquete'},
   
-      
       //  ╔═╗╔═╗╔═╗╔═╗╔═╗╦╔═╗╔╦╗╦╔═╗╔╗╔╔═╗
       //  ╠═╣╚═╗╚═╗║ ║║  ║╠═╣ ║ ║║ ║║║║╚═╗
       //  ╩ ╩╚═╝╚═╝╚═╝╚═╝╩╩ ╩ ╩ ╩╚═╝╝╚╝╚═╝
   
+      pasajero: { model: 'pasajero'},
+  
     },
   
   };
+  
   
